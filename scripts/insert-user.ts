@@ -1,20 +1,14 @@
-import { config } from "dotenv";
-
-config({
-  path: ".env.local",
-});
-
-import { db } from "../src/db/index";
+import { db } from "../src/db";
 import { users } from "../src/db/schema";
 
 async function main() {
   const user = await db
     .insert(users)
     .values({
-      name: "Navjot",
-      email: "navjot@example.com",
-      username: "navjot",
-      bio: "Frontend developer learning full stack development",
+      name: "sneha",
+      email: "sneha@example.com",
+      username: "sneha",
+      bio: "Frontend developer learning full stack development with Drizzle ORM and Neon",
     })
     .returning();
 
@@ -23,4 +17,4 @@ async function main() {
 
 main()
   .catch(console.error)
-  .finally(() => process.exit());
+  .finally(() => process.exit(0));
