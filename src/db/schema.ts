@@ -25,6 +25,7 @@ export const user = pgTable("user", {
 
   image: text("image"),
 
+  // DevConnect profile fields
   username: text("username").unique(),
 
   bio: text("bio"),
@@ -70,7 +71,6 @@ export const session = pgTable(
         onDelete: "cascade",
       }),
   },
-
   (table) => [
     index("session_userId_idx").on(table.userId),
   ],
@@ -121,7 +121,6 @@ export const account = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-
   (table) => [
     index("account_userId_idx").on(table.userId),
   ],
@@ -151,7 +150,6 @@ export const verification = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-
   (table) => [
     index("verification_identifier_idx").on(
       table.identifier
@@ -228,7 +226,6 @@ export const likes = pgTable(
       .defaultNow()
       .notNull(),
   },
-
   (table) => [
     primaryKey({
       columns: [table.postId, table.userId],
@@ -259,7 +256,6 @@ export const follows = pgTable(
       .defaultNow()
       .notNull(),
   },
-
   (table) => [
     primaryKey({
       columns: [table.followerId, table.followingId],
@@ -279,6 +275,12 @@ export const userRelations = relations(
     posts: many(posts),
     comments: many(comments),
     likes: many(likes),
+    followers: many(follows, {
+      relationName: "followers",
+    }),
+    following: many(follows, {
+      relationName: "following",
+    }),
   })
 );
 
@@ -298,6 +300,62 @@ export const accountRelations = relations(
     user: one(user, {
       fields: [account.userId],
       references: [user.id],
+    }),
+  })
+);
+
+export const postRelations = relations(
+  posts,
+  ({ one, many }) => ({
+    user: one(user, {
+      fields: [posts.userId],
+      references: [user.id],
+    }),
+    comments: many(comments),
+    likes: many(likes),
+  })
+);
+
+export const commentRelations = relations(
+  comments,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [comments.userId],
+      references: [user.id],
+    }),
+    post: one(posts, {
+      fields: [comments.postId],
+      references: [posts.id],
+    }),
+  })
+);
+
+export const likeRelations = relations(
+  likes,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [likes.userId],
+      references: [user.id],
+    }),
+    post: one(posts, {
+      fields: [likes.postId],
+      references: [posts.id],
+    }),
+  })
+);
+
+export const followRelations = relations(
+  follows,
+  ({ one }) => ({
+    follower: one(user, {
+      fields: [follows.followerId],
+      references: [user.id],
+      relationName: "followers",
+    }),
+    following: one(user, {
+      fields: [follows.followingId],
+      references: [user.id],
+      relationName: "following",
     }),
   })
 );
