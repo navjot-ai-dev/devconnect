@@ -15,6 +15,13 @@
       "when": 1787824407672,
       "tag": "0001_good_starfox",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787843646971,
+      "tag": "0002_friendly_venom",
+      "breakpoints": true
     }
   ]
 }
