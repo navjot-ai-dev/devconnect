@@ -1,10 +1,13 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { posts } from "@/db/schema";
-import { desc } from "drizzle-orm";
+import { likes, posts } from "@/db/schema";
+import { desc, eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 
+// ========================
 // CREATE POST
+// ========================
+
 export async function POST(request: Request) {
   try {
     const session = await auth.api.getSession({
@@ -19,7 +22,6 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-
     const content = body.content?.trim();
 
     if (!content) {
@@ -41,7 +43,11 @@ export async function POST(request: Request) {
     return Response.json(
       {
         success: true,
-        post: newPost[0],
+        post: {
+          ...newPost[0],
+          likeCount: 0,
+          isLiked: false,
+        },
       },
       { status: 201 }
     );
@@ -55,12 +61,41 @@ export async function POST(request: Request) {
   }
 }
 
+// ========================
 // GET POSTS
+// ========================
+
 export async function GET() {
   try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
     const allPosts = await db
-      .select()
+      .select({
+        id: posts.id,
+        userId: posts.userId,
+        content: posts.content,
+        createdAt: posts.createdAt,
+
+        likeCount: sql<number>`
+          count(${likes.userId})
+        `.mapWith(Number),
+
+        isLiked: session
+          ? sql<boolean>`
+              exists (
+                select 1
+                from ${likes}
+                where ${likes.postId} = ${posts.id}
+                and ${likes.userId} = ${session.user.id}
+              )
+            `
+          : sql<boolean>`false`,
+      })
       .from(posts)
+      .leftJoin(likes, eq(posts.id, likes.postId))
+      .groupBy(posts.id)
       .orderBy(desc(posts.createdAt));
 
     return Response.json({

@@ -7,6 +7,8 @@ type Post = {
   userId: string;
   content: string;
   createdAt: string;
+  likeCount: number;
+  isLiked: boolean;
 };
 
 type PostFeedProps = {
@@ -18,7 +20,6 @@ export default function PostFeed({
 }: PostFeedProps) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [likedPosts, setLikedPosts] = useState<string[]>([]);
 
   async function fetchPosts() {
     try {
@@ -78,13 +79,7 @@ export default function PostFeed({
         return;
       }
 
-      setLikedPosts((current) => {
-        if (data.liked) {
-          return [...current, postId];
-        }
-
-        return current.filter((id) => id !== postId);
-      });
+      await fetchPosts();
     } catch (error) {
       console.error("LIKE POST ERROR:", error);
     }
@@ -101,44 +96,41 @@ export default function PostFeed({
 
   return (
     <div className="space-y-4">
-      {posts.map((post) => {
-        const isLiked = likedPosts.includes(post.id);
+      {posts.map((post) => (
+        <article
+          key={post.id}
+          className="rounded-xl border p-4 shadow-sm"
+        >
+          <p className="text-sm text-gray-500">
+            User: {post.userId}
+          </p>
 
-        return (
-          <article
-            key={post.id}
-            className="rounded-xl border p-4 shadow-sm"
-          >
-            <p className="text-sm text-gray-500">
-              User: {post.userId}
-            </p>
+          <p className="mt-2">
+            {post.content}
+          </p>
 
-            <p className="mt-2">
-              {post.content}
-            </p>
+          <p className="mt-2 text-xs text-gray-400">
+            {new Date(post.createdAt).toLocaleString()}
+          </p>
 
-            <p className="mt-2 text-xs text-gray-400">
-              {new Date(post.createdAt).toLocaleString()}
-            </p>
+          <div className="mt-4 flex gap-3">
+            <button
+              onClick={() => handleLike(post.id)}
+              className="rounded-lg border px-3 py-1 text-sm"
+            >
+              {post.isLiked ? "❤️ Liked" : "🤍 Like"}{" "}
+              {post.likeCount}
+            </button>
 
-            <div className="mt-4 flex gap-3">
-              <button
-                onClick={() => handleLike(post.id)}
-                className="rounded-lg border px-3 py-1 text-sm"
-              >
-                {isLiked ? "❤️ Liked" : "🤍 Like"}
-              </button>
-
-              <button
-                onClick={() => handleDelete(post.id)}
-                className="rounded-lg bg-red-500 px-3 py-1 text-sm text-white"
-              >
-                Delete 🗑️
-              </button>
-            </div>
-          </article>
-        );
-      })}
+            <button
+              onClick={() => handleDelete(post.id)}
+              className="rounded-lg bg-red-500 px-3 py-1 text-sm text-white"
+            >
+              Delete 🗑️
+            </button>
+          </div>
+        </article>
+      ))}
     </div>
   );
 }
