@@ -1,3 +1,4 @@
+
 import { relations } from "drizzle-orm";
 import {
   pgTable,
@@ -112,6 +113,9 @@ export const account = pgTable(
     scope: text("scope"),
 
     password: text("password"),
+
+    // Required by your Better Auth version
+    issuer: text("issuer"),
 
     createdAt: timestamp("created_at")
       .defaultNow()
@@ -275,9 +279,11 @@ export const userRelations = relations(
     posts: many(posts),
     comments: many(comments),
     likes: many(likes),
+
     followers: many(follows, {
       relationName: "followers",
     }),
+
     following: many(follows, {
       relationName: "following",
     }),
@@ -311,6 +317,7 @@ export const postRelations = relations(
       fields: [posts.userId],
       references: [user.id],
     }),
+
     comments: many(comments),
     likes: many(likes),
   })
@@ -323,6 +330,7 @@ export const commentRelations = relations(
       fields: [comments.userId],
       references: [user.id],
     }),
+
     post: one(posts, {
       fields: [comments.postId],
       references: [posts.id],
@@ -337,6 +345,7 @@ export const likeRelations = relations(
       fields: [likes.userId],
       references: [user.id],
     }),
+
     post: one(posts, {
       fields: [likes.postId],
       references: [posts.id],
@@ -352,6 +361,7 @@ export const followRelations = relations(
       references: [user.id],
       relationName: "followers",
     }),
+
     following: one(user, {
       fields: [follows.followingId],
       references: [user.id],
@@ -359,3 +369,4 @@ export const followRelations = relations(
     }),
   })
 );
+
