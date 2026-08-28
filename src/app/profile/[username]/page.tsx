@@ -1,11 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import {
-  user,
-  posts,
-  follows,
-} from "@/db/schema";
-import { eq, and, count, desc } from "drizzle-orm";
+import { follows, posts, user } from "@/db/schema";
+import { and, count, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import FollowButton from "@/components/FollowButton";
@@ -22,7 +18,7 @@ export default async function PublicProfilePage({
   const { username } = await params;
 
   // =========================
-  // GET USER
+  // GET PROFILE
   // =========================
 
   const [profile] = await db
@@ -36,7 +32,15 @@ export default async function PublicProfilePage({
   }
 
   // =========================
-  // GET POST COUNT
+  // CURRENT SESSION
+  // =========================
+
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  // =========================
+  // POST COUNT
   // =========================
 
   const [postCount] = await db
@@ -47,7 +51,7 @@ export default async function PublicProfilePage({
     .where(eq(posts.userId, profile.id));
 
   // =========================
-  // GET FOLLOWER COUNT
+  // FOLLOWER COUNT
   // =========================
 
   const [followerCount] = await db
@@ -60,7 +64,7 @@ export default async function PublicProfilePage({
     );
 
   // =========================
-  // GET FOLLOWING COUNT
+  // FOLLOWING COUNT
   // =========================
 
   const [followingCount] = await db
@@ -73,21 +77,16 @@ export default async function PublicProfilePage({
     );
 
   // =========================
-  // CURRENT SESSION
-  // =========================
-
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  // =========================
-  // CHECK FOLLOWING
+  // IS CURRENT USER FOLLOWING?
   // =========================
 
   let isFollowing = false;
 
-  if (session && session.user.id !== profile.id) {
-    const [follow] = await db
+  if (
+    session &&
+    session.user.id !== profile.id
+  ) {
+    const [existingFollow] = await db
       .select()
       .from(follows)
       .where(
@@ -104,30 +103,20 @@ export default async function PublicProfilePage({
       )
       .limit(1);
 
-    isFollowing = !!follow;
+    isFollowing = !!existingFollow;
   }
 
   // =========================
-  // GET USER POSTS
+  // PAGE
   // =========================
 
-  const userPosts = await db
-    .select()
-    .from(posts)
-    .where(eq(posts.userId, profile.id))
-    .orderBy(desc(posts.createdAt));
-
   return (
-    <main className="min-h-screen p-8">
+    <main className="min-h-screen p-6">
       <div className="mx-auto max-w-2xl">
-
-        {/* =========================
-            PROFILE
-        ========================= */}
 
         <div className="rounded-xl border p-6">
 
-          {/* Profile Image */}
+          {/* PROFILE IMAGE */}
 
           {profile.image ? (
             <img
@@ -143,27 +132,25 @@ export default async function PublicProfilePage({
             </div>
           )}
 
-          {/* Name */}
+          {/* NAME */}
 
           <h1 className="mt-4 text-3xl font-bold">
             {profile.name}
           </h1>
 
-          {/* Username */}
+          {/* USERNAME */}
 
           <p className="text-gray-500">
             @{profile.username}
           </p>
 
-          {/* Bio */}
+          {/* BIO */}
 
           <p className="mt-4">
             {profile.bio || "No bio yet."}
           </p>
 
-          {/* =========================
-              STATS
-          ========================= */}
+          {/* STATS */}
 
           <div className="mt-6 flex gap-8">
 
@@ -199,9 +186,7 @@ export default async function PublicProfilePage({
 
           </div>
 
-          {/* =========================
-              FOLLOW BUTTON
-          ========================= */}
+          {/* FOLLOW BUTTON */}
 
           {session &&
             session.user.id !== profile.id && (
@@ -212,45 +197,6 @@ export default async function PublicProfilePage({
             )}
 
         </div>
-
-        {/* =========================
-            POSTS
-        ========================= */}
-
-        <section className="mt-8">
-
-          <h2 className="mb-4 text-2xl font-bold">
-            Posts
-          </h2>
-
-          {userPosts.length === 0 ? (
-            <div className="rounded-xl border p-6 text-center text-gray-500">
-              No posts yet.
-            </div>
-          ) : (
-            <div className="space-y-4">
-
-              {userPosts.map((post) => (
-                <article
-                  key={post.id}
-                  className="rounded-xl border p-5 shadow-sm"
-                >
-                  <p>
-                    {post.content}
-                  </p>
-
-                  <p className="mt-3 text-xs text-gray-400">
-                    {new Date(
-                      post.createdAt
-                    ).toLocaleString()}
-                  </p>
-                </article>
-              ))}
-
-            </div>
-          )}
-
-        </section>
 
       </div>
     </main>

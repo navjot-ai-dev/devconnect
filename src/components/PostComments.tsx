@@ -5,6 +5,7 @@ import CommentForm from "@/components/CommentForm";
 
 type Comment = {
   id: string;
+  userId: string;
   content: string;
   createdAt: string;
   name: string;
@@ -15,14 +16,19 @@ type Comment = {
 type PostCommentsProps = {
   postId: string;
   initialComments: Comment[];
+  currentUserId: string;
 };
 
 export default function PostComments({
   postId,
   initialComments,
+  currentUserId,
 }: PostCommentsProps) {
   const [comments, setComments] =
     useState<Comment[]>(initialComments);
+
+  const [deletingId, setDeletingId] =
+    useState<string | null>(null);
 
   async function fetchComments() {
     try {
@@ -43,6 +49,51 @@ export default function PostComments({
     }
   }
 
+  async function handleDelete(commentId: string) {
+    const confirmed = confirm(
+      "Are you sure you want to delete this comment?"
+    );
+
+    if (!confirmed) return;
+
+    setDeletingId(commentId);
+
+    try {
+      const response = await fetch(
+        `/api/comments/${commentId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(
+          data.error ||
+            "Failed to delete comment"
+        );
+        return;
+      }
+
+      // Remove immediately from UI
+      setComments((current) =>
+        current.filter(
+          (comment) =>
+            comment.id !== commentId
+        )
+      );
+    } catch (error) {
+      console.error(
+        "DELETE COMMENT ERROR:",
+        error
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   useEffect(() => {
     setComments(initialComments);
   }, [initialComments]);
@@ -50,18 +101,20 @@ export default function PostComments({
   return (
     <section className="mt-8">
 
+      {/* TITLE */}
+
       <h2 className="mb-4 text-xl font-bold">
         Comments
       </h2>
 
-      {/* Comment Form */}
+      {/* COMMENT FORM */}
 
       <CommentForm
         postId={postId}
         onCommentCreated={fetchComments}
       />
 
-      {/* Comments */}
+      {/* COMMENTS */}
 
       <div className="mt-6 space-y-4">
 
@@ -77,6 +130,8 @@ export default function PostComments({
               key={comment.id}
               className="rounded-xl border p-4"
             >
+
+              {/* AUTHOR */}
 
               <div className="flex items-center gap-3">
 
@@ -108,15 +163,37 @@ export default function PostComments({
 
               </div>
 
+              {/* COMMENT */}
+
               <p className="mt-3 whitespace-pre-wrap">
                 {comment.content}
               </p>
+
+              {/* DATE */}
 
               <p className="mt-2 text-xs text-gray-400">
                 {new Date(
                   comment.createdAt
                 ).toLocaleString()}
               </p>
+
+              {/* DELETE */}
+
+              {comment.userId === currentUserId && (
+                <button
+                  onClick={() =>
+                    handleDelete(comment.id)
+                  }
+                  disabled={
+                    deletingId === comment.id
+                  }
+                  className="mt-3 rounded-lg bg-red-500 px-3 py-1 text-sm text-white disabled:opacity-50"
+                >
+                  {deletingId === comment.id
+                    ? "Deleting..."
+                    : "Delete 🗑️"}
+                </button>
+              )}
 
             </article>
           ))
