@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 
-export default function CreatePost() {
+type CreatePostProps = {
+  onPostCreated: () => void;
+};
+
+export default function CreatePost({
+  onPostCreated,
+}: CreatePostProps) {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,9 +38,10 @@ export default function CreatePost() {
         return;
       }
 
-      console.log("POST CREATED:", data);
-
       setContent("");
+
+      // Tell the feed to reload
+      onPostCreated();
     } catch (error) {
       console.error("CREATE POST ERROR:", error);
     } finally {
