@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { likes, posts } from "@/db/schema";
+import { likes, posts, user } from "@/db/schema";
 import { desc, eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 
@@ -78,10 +78,17 @@ export async function GET() {
         content: posts.content,
         createdAt: posts.createdAt,
 
+        // User information
+        name: user.name,
+        username: user.username,
+        image: user.image,
+
+        // Like count
         likeCount: sql<number>`
           count(${likes.userId})
         `.mapWith(Number),
 
+        // Is current user liked this post?
         isLiked: session
           ? sql<boolean>`
               exists (
@@ -94,8 +101,12 @@ export async function GET() {
           : sql<boolean>`false`,
       })
       .from(posts)
+      .innerJoin(user, eq(posts.userId, user.id))
       .leftJoin(likes, eq(posts.id, likes.postId))
-      .groupBy(posts.id)
+      .groupBy(
+        posts.id,
+        user.id
+      )
       .orderBy(desc(posts.createdAt));
 
     return Response.json({
