@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import PostComments from "@/components/PostComments";
 import { auth } from "@/lib/auth";
+import { formatTimestamp } from "@/lib/utils";
 
 type Props = {
   params: Promise<{
@@ -124,9 +125,7 @@ export default async function PostPage({ params }: Props) {
           {/* DATE */}
 
           <p className="mt-4 text-xs text-gray-400">
-            {new Date(
-              post.createdAt
-            ).toLocaleString()}
+            {formatTimestamp(post.createdAt)}
           </p>
 
         </article>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { parseResponseJson } from "@/lib/http";
 import { toast } from "@/lib/toast";
+import { formatTimestamp } from "@/lib/utils";
 
 type Notification = {
   id: string;
@@ -295,7 +296,7 @@ export default function Notifications() {
                   )}
 
                   <p style={{ marginTop: "0.25rem", fontSize: "0.75rem", color: "oklch(0.45 0.03 265)" }}>
-                    🕐 {new Date(notification.createdAt).toLocaleString()}
+                    🕐 {formatTimestamp(notification.createdAt)}
                   </p>
                 </div>
 

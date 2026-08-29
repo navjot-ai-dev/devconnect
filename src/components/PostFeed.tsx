@@ -5,6 +5,7 @@ import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { parseResponseJson } from "@/lib/http";
 import { toast } from "@/lib/toast";
+import { formatTimestamp } from "@/lib/utils";
 
 type Post = {
   id: string;
@@ -350,7 +351,7 @@ export default function PostFeed({ onRefreshReady }: PostFeedProps) {
 
             {/* Timestamp */}
             <p style={{ marginTop: "0.625rem", fontSize: "0.75rem", color: "oklch(0.45 0.03 265)" }}>
-              🕐 {new Date(post.createdAt).toLocaleString()}
+              🕐 {formatTimestamp(post.createdAt)}
             </p>
 
             {/* Like count */}

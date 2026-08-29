@@ -5,6 +5,7 @@ import Link from "next/link";
 import CommentForm from "@/components/CommentForm";
 import { parseResponseJson } from "@/lib/http";
 import { toast } from "@/lib/toast";
+import { formatTimestamp } from "@/lib/utils";
 
 type Comment = {
   id: string;
@@ -269,7 +270,7 @@ export default function PostComments({
               )}
 
               <p style={{ marginTop: "0.375rem", fontSize: "0.725rem", color: "oklch(0.45 0.03 265)" }}>
-                🕐 {new Date(comment.createdAt).toLocaleString()}
+                🕐 {formatTimestamp(comment.createdAt)}
               </p>
 
               {comment.userId === currentUserId && (

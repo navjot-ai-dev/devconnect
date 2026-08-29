@@ -2,6 +2,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { follows, posts, user } from "@/db/schema";
+import { formatTimestamp } from "@/lib/utils";
 import {
   and,
   desc,
@@ -268,9 +269,7 @@ export default async function PublicProfilePage({
                   </p>
 
                   <p className="mt-3 text-xs text-gray-400">
-                    {new Date(
-                      post.createdAt
-                    ).toLocaleString()}
+                    {formatTimestamp(post.createdAt)}
                   </p>
                 </Link>
               ))}
