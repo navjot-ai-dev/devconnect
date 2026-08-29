@@ -1,4 +1,3 @@
-
 import { relations } from "drizzle-orm";
 import {
   pgTable,
@@ -114,7 +113,6 @@ export const account = pgTable(
 
     password: text("password"),
 
-    // Required by your Better Auth version
     issuer: text("issuer"),
 
     createdAt: timestamp("created_at")
@@ -262,9 +260,45 @@ export const follows = pgTable(
   },
   (table) => [
     primaryKey({
-      columns: [table.followerId, table.followingId],
+      columns: [
+        table.followerId,
+        table.followingId,
+      ],
     }),
   ],
+);
+
+// ====================
+// NOTIFICATIONS
+// ====================
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: text("id").primaryKey(),
+
+    recipientId: text("recipient_id")
+      .notNull()
+      .references(() => user.id, {
+        onDelete: "cascade",
+      }),
+
+    actorId: text("actor_id")
+      .notNull()
+      .references(() => user.id, {
+        onDelete: "cascade",
+      }),
+
+    type: text("type").notNull(),
+
+    read: boolean("read")
+      .default(false)
+      .notNull(),
+
+    createdAt: timestamp("created_at")
+      .defaultNow()
+      .notNull(),
+  }
 );
 
 // ====================
@@ -275,9 +309,13 @@ export const userRelations = relations(
   user,
   ({ many }) => ({
     sessions: many(session),
+
     accounts: many(account),
+
     posts: many(posts),
+
     comments: many(comments),
+
     likes: many(likes),
 
     followers: many(follows, {
@@ -287,8 +325,28 @@ export const userRelations = relations(
     following: many(follows, {
       relationName: "following",
     }),
+
+    notificationsReceived: many(
+      notifications,
+      {
+        relationName:
+          "notificationsReceived",
+      }
+    ),
+
+    notificationsSent: many(
+      notifications,
+      {
+        relationName:
+          "notificationsSent",
+      }
+    ),
   })
 );
+
+// ====================
+// SESSION RELATIONS
+// ====================
 
 export const sessionRelations = relations(
   session,
@@ -300,6 +358,10 @@ export const sessionRelations = relations(
   })
 );
 
+// ====================
+// ACCOUNT RELATIONS
+// ====================
+
 export const accountRelations = relations(
   account,
   ({ one }) => ({
@@ -310,6 +372,10 @@ export const accountRelations = relations(
   })
 );
 
+// ====================
+// POST RELATIONS
+// ====================
+
 export const postRelations = relations(
   posts,
   ({ one, many }) => ({
@@ -319,9 +385,14 @@ export const postRelations = relations(
     }),
 
     comments: many(comments),
+
     likes: many(likes),
   })
 );
+
+// ====================
+// COMMENT RELATIONS
+// ====================
 
 export const commentRelations = relations(
   comments,
@@ -338,6 +409,10 @@ export const commentRelations = relations(
   })
 );
 
+// ====================
+// LIKE RELATIONS
+// ====================
+
 export const likeRelations = relations(
   likes,
   ({ one }) => ({
@@ -352,6 +427,10 @@ export const likeRelations = relations(
     }),
   })
 );
+
+// ====================
+// FOLLOW RELATIONS
+// ====================
 
 export const followRelations = relations(
   follows,
@@ -370,3 +449,30 @@ export const followRelations = relations(
   })
 );
 
+// ====================
+// NOTIFICATION RELATIONS
+// ====================
+
+export const notificationRelations =
+  relations(
+    notifications,
+    ({ one }) => ({
+      recipient: one(user, {
+        fields: [
+          notifications.recipientId,
+        ],
+        references: [user.id],
+        relationName:
+          "notificationsReceived",
+      }),
+
+      actor: one(user, {
+        fields: [
+          notifications.actorId,
+        ],
+        references: [user.id],
+        relationName:
+          "notificationsSent",
+      }),
+    })
+  );

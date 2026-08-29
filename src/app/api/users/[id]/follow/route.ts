@@ -1,71 +1,106 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { follows, user } from "@/db/schema";
+import {
+  follows,
+  notifications,
+} from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 
+type Props = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: Props
 ) {
   try {
-    // 1. Check authentication
+    // =========================
+    // GET SESSION
+    // =========================
+
     const session = await auth.api.getSession({
       headers: await headers(),
     });
 
+
+
     if (!session) {
       return Response.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+        {
+          error: "Unauthorized",
+        },
+        {
+          status: 401,
+        }
       );
     }
 
-    // 2. Get target user ID
-    const { id: targetUserId } = await params;
+    console.log("CURRENT USER:", session.user.id);
 
-    // 3. Prevent following yourself
+    // =========================
+    // GET TARGET USER
+    // =========================
+
+    const { id: targetUserId } =
+      await params;
+
+    // =========================
+    // CANNOT FOLLOW YOURSELF
+      // =========================
+
     if (session.user.id === targetUserId) {
       return Response.json(
-        { error: "You cannot follow yourself" },
-        { status: 400 }
+        {
+          error: "You cannot follow yourself",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
-    // 4. Check whether target user exists
-    const targetUser = await db
-      .select({ id: user.id })
-      .from(user)
-      .where(eq(user.id, targetUserId))
-      .limit(1);
+    // =========================
+    // CHECK EXISTING FOLLOW
+    // =========================
 
-    if (targetUser.length === 0) {
-      return Response.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
-    }
-
-    // 5. Check existing follow
-    const existingFollow = await db
+    const [existingFollow] = await db
       .select()
       .from(follows)
       .where(
         and(
-          eq(follows.followerId, session.user.id),
-          eq(follows.followingId, targetUserId)
+          eq(
+            follows.followerId,
+            session.user.id
+          ),
+          eq(
+            follows.followingId,
+            targetUserId
+          )
         )
       )
       .limit(1);
 
-    // 6. Already following → UNFOLLOW
-    if (existingFollow.length > 0) {
+    // =========================
+    // UNFOLLOW
+    // =========================
+
+    if (existingFollow) {
       await db
         .delete(follows)
         .where(
           and(
-            eq(follows.followerId, session.user.id),
-            eq(follows.followingId, targetUserId)
+            eq(
+              follows.followerId,
+              session.user.id
+            ),
+            eq(
+              follows.followingId,
+              targetUserId
+            )
           )
         );
 
@@ -76,10 +111,29 @@ export async function POST(
       });
     }
 
-    // 7. Not following → FOLLOW
+    // =========================
+    // FOLLOW
+    // =========================
+
     await db.insert(follows).values({
       followerId: session.user.id,
       followingId: targetUserId,
+    });
+
+    // =========================
+    // CREATE NOTIFICATION
+    // =========================
+
+    await db.insert(notifications).values({
+      id: crypto.randomUUID(),
+
+      recipientId: targetUserId,
+
+      actorId: session.user.id,
+
+      type: "follow",
+
+      read: false,
     });
 
     return Response.json({
@@ -88,11 +142,19 @@ export async function POST(
       message: "User followed",
     });
   } catch (error) {
-    console.error("FOLLOW_ERROR:", error);
+    console.error(
+      "FOLLOW_ERROR:",
+      error
+    );
 
     return Response.json(
-      { error: "Failed to follow user" },
-      { status: 500 }
+      {
+        success: false,
+        error: "Failed to follow user",
+      },
+      {
+        status: 500,
+      }
     );
   }
 }
