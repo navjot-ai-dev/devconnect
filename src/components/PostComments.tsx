@@ -203,7 +203,7 @@ export default function PostComments({
                   {comment.username ? (
                     <Link
                       href={`/profile/${comment.username}`}
-                      style={{ fontWeight: 600, color: "oklch(0.9 0.02 265)", textDecoration: "none" }}
+                      style={{ fontWeight: 700, color: "oklch(0.9 0.02 265)", textDecoration: "none" }}
                       onMouseEnter={(e) => (e.currentTarget.style.color = "oklch(0.75 0.2 270)")}
                       onMouseLeave={(e) => (e.currentTarget.style.color = "oklch(0.9 0.02 265)")}
                     >
