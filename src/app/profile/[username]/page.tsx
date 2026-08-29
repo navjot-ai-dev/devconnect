@@ -116,7 +116,7 @@ export default async function PublicProfilePage({
   }
 
   return (
-    <main className="min-h-screen p-6">
+    <main className="min-h-screen p-4 sm:p-6">
       <div className="mx-auto max-w-2xl">
 
         {/* =========================
@@ -163,7 +163,7 @@ export default async function PublicProfilePage({
               STATS
           ========================= */}
 
-          <div className="mt-6 flex gap-8">
+          <div className="mt-6 flex flex-wrap gap-4 sm:gap-8">
 
             {/* POSTS */}
 
@@ -215,6 +215,16 @@ export default async function PublicProfilePage({
           {/* =========================
               FOLLOW BUTTON
           ========================= */}
+
+          {session &&
+            session.user.id === profile.id && (
+              <Link
+                href="/profile"
+                className="mt-6 inline-block rounded-lg bg-black px-5 py-2 font-medium text-white hover:opacity-90"
+              >
+                Edit Profile
+              </Link>
+            )}
 
           {session &&
             session.user.id !== profile.id && (

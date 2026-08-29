@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { follows, notifications, user } from "@/db/schema";
+import { follows, user } from "@/db/schema";
 import { jsonError, jsonSuccess } from "@/lib/http";
 import { createNotification } from "@/lib/notifications";
 import { and, eq, sql } from "drizzle-orm";

@@ -5,7 +5,9 @@ import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import EditProfileForm from "@/components/EditProfileForm";
+import SignOutButton from "@/components/SignOutButton";
 
 export default async function ProfilePage() {
   const session = await auth.api.getSession({
@@ -27,11 +29,20 @@ export default async function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen p-8">
+    <main className="min-h-screen p-4 sm:p-8">
       <div className="mx-auto max-w-2xl">
-        <h1 className="text-3xl font-bold">
-          My Profile 👤
+        <h1 className="text-2xl font-bold sm:text-3xl">
+          My Profile
         </h1>
+
+        {profile.username && (
+          <Link
+            href={`/profile/${profile.username}`}
+            className="mt-2 inline-block text-sm text-gray-500 hover:underline"
+          >
+            View public profile
+          </Link>
+        )}
 
         <div className="mt-6 rounded-xl border p-6">
           {profile.image ? (
@@ -91,6 +102,8 @@ export default async function ProfilePage() {
           bio={profile.bio ?? ""}
           image={profile.image ?? ""}
         />
+
+        <SignOutButton />
       </div>
     </main>
   );

@@ -1,68 +1,95 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { parseResponseJson } from "@/lib/http";
+import { toast } from "@/lib/toast";
 
 type Notification = {
   id: string;
   type: string;
   read: boolean;
   createdAt: string;
+  postId: string | null;
   actorId: string;
   actorName: string;
   actorUsername: string | null;
   actorImage: string | null;
 };
 
+function notificationCopy(notification: Notification) {
+  const handle =
+    notification.actorUsername || notification.actorName;
+
+  if (notification.type === "follow") {
+    return `👤 ${handle} started following you`;
+  }
+
+  if (notification.type === "like") {
+    return `❤️ ${handle} liked your post`;
+  }
+
+  if (notification.type === "comment") {
+    return `💬 ${handle} commented on your post`;
+  }
+
+  return `${handle} ${notification.type}`;
+}
+
+function notificationHref(notification: Notification) {
+  if (notification.type === "follow" && notification.actorUsername) {
+    return `/profile/${notification.actorUsername}`;
+  }
+
+  if (
+    (notification.type === "like" || notification.type === "comment") &&
+    notification.postId
+  ) {
+    return `/post/${notification.postId}`;
+  }
+
+  if (notification.actorUsername) {
+    return `/profile/${notification.actorUsername}`;
+  }
+
+  return null;
+}
+
 export default function Notifications() {
-  const [notifications, setNotifications] =
-    useState<Notification[]>([]);
-
-  const [unreadCount, setUnreadCount] =
-    useState(0);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  // =========================
-  // GET NOTIFICATIONS
-  // =========================
+  const router = useRouter();
+  const [notifications, setNotifications] = useState<Notification[]>(
+    []
+  );
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [markingAll, setMarkingAll] = useState(false);
 
   async function fetchNotifications() {
     try {
-      const response = await fetch(
-        "/api/notifications",
-        {
-          credentials: "include",
-        }
-      );
-
-      const data = await response.json();
+      const response = await fetch("/api/notifications", {
+        credentials: "include",
+      });
+      const data = await parseResponseJson(response);
 
       if (!response.ok) {
-        console.error(data.error);
+        setError(data.error || "Failed to load notifications");
         return;
       }
 
       setNotifications(data.notifications || []);
       setUnreadCount(data.unreadCount || 0);
-    } catch (error) {
-      console.error(
-        "GET NOTIFICATIONS ERROR:",
-        error
-      );
+      setError("");
+    } catch (err) {
+      console.error("GET NOTIFICATIONS ERROR:", err);
+      setError("Failed to load notifications");
     } finally {
       setLoading(false);
     }
   }
 
-  // =========================
-  // MARK ONE AS READ
-  // =========================
-
-  async function markAsRead(
-    notificationId: string
-  ) {
+  async function markAsRead(notificationId: string) {
     try {
       const response = await fetch(
         `/api/notifications/${notificationId}`,
@@ -71,54 +98,40 @@ export default function Notifications() {
           credentials: "include",
         }
       );
-
-      const data = await response.json();
+      const data = await parseResponseJson(response);
 
       if (!response.ok) {
-        console.error(data.error);
+        toast(data.error || "Failed to mark as read", "error");
         return;
       }
 
       setNotifications((current) =>
         current.map((notification) =>
           notification.id === notificationId
-            ? {
-                ...notification,
-                read: true,
-              }
+            ? { ...notification, read: true }
             : notification
         )
       );
 
-      setUnreadCount((count) =>
-        Math.max(0, count - 1)
-      );
-    } catch (error) {
-      console.error(
-        "MARK READ ERROR:",
-        error
-      );
+      setUnreadCount((count) => Math.max(0, count - 1));
+    } catch (err) {
+      console.error("MARK READ ERROR:", err);
+      toast("Failed to mark as read", "error");
     }
   }
 
-  // =========================
-  // MARK ALL AS READ
-  // =========================
-
   async function markAllAsRead() {
-    try {
-      const response = await fetch(
-        "/api/notifications/read-all",
-        {
-          method: "PATCH",
-          credentials: "include",
-        }
-      );
+    setMarkingAll(true);
 
-      const data = await response.json();
+    try {
+      const response = await fetch("/api/notifications", {
+        method: "PATCH",
+        credentials: "include",
+      });
+      const data = await parseResponseJson(response);
 
       if (!response.ok) {
-        console.error(data.error);
+        toast(data.error || "Failed to mark all as read", "error");
         return;
       }
 
@@ -128,52 +141,46 @@ export default function Notifications() {
           read: true,
         }))
       );
-
       setUnreadCount(0);
-    } catch (error) {
-      console.error(
-        "MARK ALL READ ERROR:",
-        error
-      );
+      toast("All notifications marked as read");
+    } catch (err) {
+      console.error("MARK ALL READ ERROR:", err);
+      toast("Failed to mark all as read", "error");
+    } finally {
+      setMarkingAll(false);
     }
   }
 
-  // =========================
-  // LOAD
-  // =========================
+  async function handleNotificationClick(notification: Notification) {
+    if (!notification.read) {
+      await markAsRead(notification.id);
+    }
+
+    const href = notificationHref(notification);
+    if (href) {
+      router.push(href);
+    }
+  }
 
   useEffect(() => {
     fetchNotifications();
   }, []);
 
-  // =========================
-  // LOADING
-  // =========================
-
   if (loading) {
     return (
-      <main className="mx-auto max-w-2xl p-6">
-        <p>Loading notifications...</p>
+      <main className="mx-auto max-w-2xl p-4 sm:p-6">
+        <p className="text-gray-500">Loading notifications...</p>
       </main>
     );
   }
 
-  // =========================
-  // UI
-  // =========================
-
   return (
-    <main className="mx-auto max-w-2xl p-6">
-
-      {/* HEADER */}
-
-      <div className="mb-6 flex items-center justify-between">
-
+    <main className="mx-auto max-w-2xl p-4 sm:p-6">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">
-            🔔 Notifications
+          <h1 className="text-2xl font-bold sm:text-3xl">
+            Notifications
           </h1>
-
           {unreadCount > 0 && (
             <p className="mt-1 text-sm text-gray-500">
               {unreadCount} unread
@@ -181,115 +188,92 @@ export default function Notifications() {
           )}
         </div>
 
-        {/* MARK ALL BUTTON */}
-
         {unreadCount > 0 && (
           <button
+            type="button"
             onClick={markAllAsRead}
-            className="rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-gray-100"
+            disabled={markingAll}
+            className="rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-black disabled:opacity-50"
           >
-            Mark all as read
+            {markingAll ? "Marking..." : "Mark all as read"}
           </button>
         )}
-
       </div>
 
-      {/* EMPTY */}
-
-      {notifications.length === 0 ? (
+      {error ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-red-700">
+          {error}
+        </div>
+      ) : notifications.length === 0 ? (
         <div className="rounded-xl border p-8 text-center">
-          <p className="text-gray-500">
-            No notifications yet.
-          </p>
+          <p className="text-gray-500">No notifications yet.</p>
         </div>
       ) : (
         <div className="space-y-3">
-
-          {notifications.map(
-            (notification) => (
-              <article
-                key={notification.id}
-                onClick={() =>
-                  !notification.read &&
-                  markAsRead(notification.id)
+          {notifications.map((notification) => (
+            <article
+              key={notification.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => handleNotificationClick(notification)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleNotificationClick(notification);
                 }
-                className={`cursor-pointer rounded-xl border p-4 transition ${
-                  !notification.read
-                    ? "bg-blue-50 hover:bg-blue-100"
-                    : "hover:bg-gray-50"
-                }`}
-              >
-
-                <div className="flex items-center gap-3">
-
-                  {/* IMAGE */}
-
-                  {notification.actorImage ? (
-                    <img
-                      src={
-                        notification.actorImage
-                      }
-                      alt={
-                        notification.actorName
-                      }
-                      className="h-12 w-12 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-bold">
-                      {notification.actorName
-                        .charAt(0)
-                        .toUpperCase()}
-                    </div>
-                  )}
-
-                  {/* CONTENT */}
-
-                  <div className="flex-1">
-
-                    <p className="font-medium">
-                      <span className="font-bold">
-                        {notification.actorName}
-                      </span>{" "}
-
-                      {notification.type ===
-                      "follow"
-                        ? "started following you"
-                        : notification.type}
-                    </p>
-
-                    {notification.actorUsername && (
-                      <p className="text-sm text-gray-500">
-                        @
-                        {
-                          notification.actorUsername
-                        }
-                      </p>
-                    )}
-
-                    <p className="mt-1 text-xs text-gray-400">
-                      {new Date(
-                        notification.createdAt
-                      ).toLocaleString()}
-                    </p>
-
+              }}
+              className={`cursor-pointer rounded-xl border p-4 transition focus-visible:ring-2 focus-visible:ring-black ${
+                !notification.read
+                  ? "bg-blue-50 hover:bg-blue-100"
+                  : "hover:bg-gray-50"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                {notification.actorImage ? (
+                  <img
+                    src={notification.actorImage}
+                    alt={notification.actorName}
+                    className="h-12 w-12 shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-200 text-lg font-bold">
+                    {notification.actorName.charAt(0).toUpperCase()}
                   </div>
+                )}
 
-                  {/* UNREAD DOT */}
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium break-words">
+                    {notificationCopy(notification)}
+                  </p>
 
-                  {!notification.read && (
-                    <span className="h-3 w-3 rounded-full bg-blue-500" />
+                  {notification.actorUsername && (
+                    <p className="text-sm text-gray-500">
+                      @{notification.actorUsername}
+                    </p>
                   )}
 
+                  <p className="mt-1 text-xs text-gray-400">
+                    {new Date(notification.createdAt).toLocaleString()}
+                  </p>
                 </div>
 
-              </article>
-            )
-          )}
-
+                {!notification.read && (
+                  <span
+                    className="mt-2 h-3 w-3 shrink-0 rounded-full bg-blue-500"
+                    aria-label="Unread"
+                  />
+                )}
+              </div>
+            </article>
+          ))}
         </div>
       )}
 
+      <p className="mt-6 text-sm text-gray-400">
+        <Link href="/home" className="hover:underline">
+          Back to home
+        </Link>
+      </p>
     </main>
   );
 }
-

@@ -1,17 +1,15 @@
-
 import { db } from "@/db";
 import { user } from "@/db/schema";
+import { jsonError, jsonSuccess } from "@/lib/http";
 import { ilike, or } from "drizzle-orm";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-
     const q = searchParams.get("q")?.trim();
 
     if (!q) {
-      return Response.json({
-        success: true,
+      return jsonSuccess({
         users: [],
       });
     }
@@ -26,30 +24,16 @@ export async function GET(request: Request) {
       })
       .from(user)
       .where(
-        or(
-          ilike(user.name, `%${q}%`),
-          ilike(user.username, `%${q}%`)
-        )
+        or(ilike(user.name, `%${q}%`), ilike(user.username, `%${q}%`))
       )
       .limit(20);
 
-    return Response.json({
-      success: true,
+    return jsonSuccess({
       users,
     });
   } catch (error) {
-    console.error(
-      "SEARCH USERS ERROR:",
-      error
-    );
+    console.error("SEARCH USERS ERROR:", error);
 
-    return Response.json(
-      {
-        success: false,
-        error: "Failed to search users",
-      },
-      { status: 500 }
-    );
+    return jsonError("Failed to search users", 500);
   }
 }
-

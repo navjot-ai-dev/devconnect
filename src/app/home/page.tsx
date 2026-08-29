@@ -8,10 +8,10 @@ export default function HomePage() {
   const refreshPosts = useRef<() => void>(() => {});
 
   return (
-    <main className="min-h-screen p-6">
+    <main className="min-h-screen p-4 sm:p-6">
       <div className="mx-auto max-w-2xl">
 
-        <h1 className="text-3xl font-bold">
+        <h1 className="text-2xl font-bold sm:text-3xl">
           DevConnect 🚀
         </h1>
 

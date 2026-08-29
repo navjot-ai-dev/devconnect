@@ -37,7 +37,11 @@ export async function readJson<T>(
   }
 }
 
-export async function parseResponseJson(response: Response) {
+export async function parseResponseJson(response: Response): Promise<{
+  success?: boolean;
+  error?: string;
+  [key: string]: any;
+}> {
   try {
     return await response.json();
   } catch {
