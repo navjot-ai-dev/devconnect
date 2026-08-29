@@ -60,7 +60,7 @@ export default function CommentForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border p-4">
+    <form onSubmit={handleSubmit} className="card-3d" style={{ padding: "1rem" }}>
       <label htmlFor="comment-content" className="sr-only">
         Write a comment
       </label>
@@ -68,19 +68,23 @@ export default function CommentForm({
         id="comment-content"
         value={content}
         onChange={(event) => setContent(event.target.value)}
-        placeholder="Write a comment..."
+        placeholder="Write a comment…"
         rows={3}
-        className="w-full resize-none rounded-lg border p-3 outline-none focus-visible:ring-2 focus-visible:ring-black"
+        className="input-3d"
+        style={{ resize: "none" }}
         disabled={loading}
       />
 
-      <button
-        type="submit"
-        disabled={loading || !content.trim()}
-        className="mt-3 rounded-lg bg-black px-4 py-2 text-sm text-white hover:opacity-90 disabled:opacity-50"
-      >
-        {loading ? "Commenting..." : "Comment"}
-      </button>
+      <div style={{ marginTop: "0.75rem", display: "flex", justifyContent: "flex-end" }}>
+        <button
+          type="submit"
+          disabled={loading || !content.trim()}
+          className="btn-3d-primary"
+          style={{ fontSize: "0.875rem" }}
+        >
+          {loading ? "⏳ Commenting…" : "💬 Comment"}
+        </button>
+      </div>
     </form>
   );
 }

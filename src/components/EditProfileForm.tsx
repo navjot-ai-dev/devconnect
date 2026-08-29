@@ -68,15 +68,38 @@ export default function EditProfileForm({
     }
   }
 
+  const labelStyle: React.CSSProperties = {
+    display: "block",
+    fontSize: "0.8125rem",
+    fontWeight: 600,
+    color: "oklch(0.65 0.08 270)",
+    marginBottom: "0.375rem",
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+  };
+
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-8 space-y-5 rounded-xl border p-4 sm:p-6"
+      className="card-3d"
+      style={{ marginTop: "2rem", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}
     >
-      <h2 className="text-2xl font-bold">Edit Profile</h2>
+      <h2
+        style={{
+          fontSize: "1.375rem",
+          fontWeight: 800,
+          letterSpacing: "-0.02em",
+          background: "linear-gradient(135deg, oklch(0.75 0.2 270), oklch(0.78 0.22 300))",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}
+      >
+        ✏️ Edit Profile
+      </h2>
 
       <div>
-        <label htmlFor="name" className="mb-1 block text-sm font-medium">
+        <label htmlFor="name" style={labelStyle}>
           Name
         </label>
         <input
@@ -84,16 +107,13 @@ export default function EditProfileForm({
           name="name"
           value={form.name}
           onChange={handleChange}
-          className="w-full rounded-md border p-3 focus-visible:ring-2 focus-visible:ring-black"
+          className="input-3d"
           required
         />
       </div>
 
       <div>
-        <label
-          htmlFor="username"
-          className="mb-1 block text-sm font-medium"
-        >
+        <label htmlFor="username" style={labelStyle}>
           Username
         </label>
         <input
@@ -101,13 +121,13 @@ export default function EditProfileForm({
           name="username"
           value={form.username}
           onChange={handleChange}
-          className="w-full rounded-md border p-3 focus-visible:ring-2 focus-visible:ring-black"
+          className="input-3d"
           required
         />
       </div>
 
       <div>
-        <label htmlFor="bio" className="mb-1 block text-sm font-medium">
+        <label htmlFor="bio" style={labelStyle}>
           Bio
         </label>
         <textarea
@@ -116,13 +136,13 @@ export default function EditProfileForm({
           value={form.bio}
           onChange={handleChange}
           rows={4}
-          placeholder="Tell us about yourself..."
-          className="w-full rounded-md border p-3 focus-visible:ring-2 focus-visible:ring-black"
+          placeholder="Tell us about yourself…"
+          className="input-3d"
         />
       </div>
 
       <div>
-        <label htmlFor="image" className="mb-1 block text-sm font-medium">
+        <label htmlFor="image" style={labelStyle}>
           Profile Image URL
         </label>
         <input
@@ -130,18 +150,21 @@ export default function EditProfileForm({
           name="image"
           value={form.image}
           onChange={handleChange}
-          placeholder="https://..."
-          className="w-full rounded-md border p-3 focus-visible:ring-2 focus-visible:ring-black"
+          placeholder="https://…"
+          className="input-3d"
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-md bg-black px-5 py-3 text-white hover:opacity-90 disabled:opacity-50 sm:w-auto"
-      >
-        {loading ? "Saving..." : "Save Changes"}
-      </button>
+      <div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-3d-primary"
+          style={{ padding: "0.625rem 1.75rem", fontWeight: 700 }}
+        >
+          {loading ? "⏳ Saving…" : "💾 Save Changes"}
+        </button>
+      </div>
     </form>
   );
 }

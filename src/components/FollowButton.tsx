@@ -51,13 +51,10 @@ export default function FollowButton({
       onClick={handleFollow}
       disabled={loading}
       aria-pressed={following}
-      className={`mt-6 rounded-lg px-5 py-2 font-medium transition focus-visible:ring-2 focus-visible:ring-black disabled:opacity-50 ${
-        following
-          ? "border border-gray-300 bg-white text-black hover:bg-gray-100"
-          : "bg-black text-white hover:opacity-80"
-      }`}
+      className={following ? "btn-3d-ghost" : "btn-3d-primary"}
+      style={{ marginTop: "1.5rem", padding: "0.5rem 1.5rem", fontWeight: 600 }}
     >
-      {loading ? "Loading..." : following ? "Following" : "Follow"}
+      {loading ? "⏳ Loading…" : following ? "✓ Following" : "＋ Follow"}
     </button>
   );
 }

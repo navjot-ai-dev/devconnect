@@ -1,10 +1,11 @@
 import { db } from "../src/db";
-import { users } from "../src/db/schema";
+import { user } from "../src/db/schema";
 
 async function main() {
-  const user = await db
-    .insert(users)
+  const insertedUser = await db
+    .insert(user)
     .values({
+      id: "seed-user-sneha",
       name: "sneha",
       email: "sneha@example.com",
       username: "sneha",
@@ -12,7 +13,7 @@ async function main() {
     })
     .returning();
 
-  console.log(user);
+  console.log(insertedUser);
 }
 
 main()

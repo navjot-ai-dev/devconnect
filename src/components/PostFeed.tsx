@@ -104,12 +104,12 @@ export default function PostFeed({ onRefreshReady }: PostFeedProps) {
         currentPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                isLiked: data.liked,
-                likeCount: data.liked
-                  ? post.likeCount + 1
-                  : Math.max(0, post.likeCount - 1),
-              }
+              ...post,
+              isLiked: data.liked,
+              likeCount: data.liked
+                ? post.likeCount + 1
+                : Math.max(0, post.likeCount - 1),
+            }
             : post
         )
       );
@@ -168,22 +168,39 @@ export default function PostFeed({ onRefreshReady }: PostFeedProps) {
   }, []);
 
   if (loading) {
-    return <p className="text-gray-500">Loading posts...</p>;
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="card-3d" style={{ padding: "1.25rem", opacity: 1 - i * 0.2 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+              <div className="skeleton-3d" style={{ width: "3rem", height: "3rem", borderRadius: "50%", flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div className="skeleton-3d" style={{ height: "0.875rem", width: "40%", marginBottom: "0.5rem" }} />
+                <div className="skeleton-3d" style={{ height: "0.75rem", width: "25%" }} />
+              </div>
+            </div>
+            <div className="skeleton-3d" style={{ height: "0.875rem", width: "100%", marginBottom: "0.5rem" }} />
+            <div className="skeleton-3d" style={{ height: "0.875rem", width: "80%", marginBottom: "0.5rem" }} />
+            <div className="skeleton-3d" style={{ height: "0.875rem", width: "60%" }} />
+          </div>
+        ))}
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-        <p className="text-red-700">{error}</p>
+      <div className="card-3d danger-zone-3d" style={{ padding: "1.5rem", textAlign: "center" }}>
+        <p style={{ color: "oklch(0.75 0.22 25)", marginBottom: "0.75rem", fontWeight: 500 }}>⚠️ {error}</p>
         <button
           type="button"
           onClick={() => {
             setLoading(true);
             fetchPosts();
           }}
-          className="mt-3 rounded-lg border bg-white px-4 py-2 text-sm hover:bg-gray-50"
+          className="btn-3d-ghost"
         >
-          Try again
+          🔄 Try again
         </button>
       </div>
     );
@@ -191,36 +208,53 @@ export default function PostFeed({ onRefreshReady }: PostFeedProps) {
 
   if (posts.length === 0) {
     return (
-      <div className="rounded-xl border p-6 text-center">
-        <p className="text-gray-500">No posts yet. Be the first to share.</p>
+      <div className="card-3d" style={{ padding: "3rem 1.5rem", textAlign: "center" }}>
+        <div style={{
+          fontSize: "3rem",
+          marginBottom: "1rem",
+          animation: "float 3s ease-in-out infinite",
+        }}>
+          🌐
+        </div>
+        <p style={{ color: "oklch(0.6 0.04 265)", fontWeight: 500 }}>
+          No posts yet. Be the first to share!
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
-      {posts.map((post) => {
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+      {posts.map((post, index) => {
         const isOwner = currentUserId === post.userId;
         const profileHref = post.username
           ? `/profile/${post.username}`
           : null;
 
+        const staggerClass = `stagger-${Math.min(index + 1, 5)}`;
+
         return (
           <article
             key={post.id}
-            className="rounded-xl border bg-white p-4 shadow-sm sm:p-5"
+            className={`card-3d ${staggerClass}`}
+            style={{ padding: "1.25rem 1.25rem 1rem" }}
           >
-            <div className="flex items-center gap-3">
+            {/* Author row */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
               {profileHref ? (
-                <Link href={profileHref} className="shrink-0">
+                <Link href={profileHref} style={{ flexShrink: 0 }}>
                   {post.image ? (
                     <img
                       src={post.image}
                       alt={post.name}
-                      className="h-12 w-12 rounded-full object-cover"
+                      className="avatar-3d"
+                      style={{ width: "3rem", height: "3rem", objectFit: "cover" }}
                     />
                   ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-bold">
+                    <div
+                      className="avatar-placeholder-3d"
+                      style={{ width: "3rem", height: "3rem", fontSize: "1.125rem" }}
+                    >
                       {post.name.charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -229,36 +263,48 @@ export default function PostFeed({ onRefreshReady }: PostFeedProps) {
                 <img
                   src={post.image}
                   alt={post.name}
-                  className="h-12 w-12 rounded-full object-cover"
+                  className="avatar-3d"
+                  style={{ width: "3rem", height: "3rem", objectFit: "cover", flexShrink: 0 }}
                 />
               ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-bold">
+                <div
+                  className="avatar-placeholder-3d"
+                  style={{ width: "3rem", height: "3rem", fontSize: "1.125rem", flexShrink: 0 }}
+                >
                   {post.name.charAt(0).toUpperCase()}
                 </div>
               )}
 
-              <div className="min-w-0">
+              <div style={{ minWidth: 0 }}>
                 {profileHref ? (
                   <Link
                     href={profileHref}
-                    className="font-bold hover:underline"
+                    style={{
+                      fontWeight: 700,
+                      color: "oklch(0.92 0.02 265)",
+                      textDecoration: "none",
+                      transition: "color 0.2s",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "oklch(0.75 0.2 270)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "oklch(0.92 0.02 265)")}
                   >
                     {post.name}
                   </Link>
                 ) : (
-                  <p className="font-bold">{post.name}</p>
+                  <p style={{ fontWeight: 700, color: "oklch(0.92 0.02 265)" }}>{post.name}</p>
                 )}
 
                 {post.username && (
-                  <p className="truncate text-sm text-gray-500">
+                  <p style={{ fontSize: "0.8125rem", color: "oklch(0.55 0.05 270)" }}>
                     @{post.username}
                   </p>
                 )}
               </div>
             </div>
 
+            {/* Content / Edit area */}
             {editingId === post.id ? (
-              <div className="mt-5 space-y-3">
+              <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 <label className="sr-only" htmlFor={`edit-post-${post.id}`}>
                   Edit post
                 </label>
@@ -266,57 +312,80 @@ export default function PostFeed({ onRefreshReady }: PostFeedProps) {
                   id={`edit-post-${post.id}`}
                   value={editContent}
                   onChange={(event) => setEditContent(event.target.value)}
-                  className="w-full rounded-lg border p-3 focus-visible:ring-2 focus-visible:ring-black"
+                  className="input-3d"
                   rows={4}
                 />
-                <div className="flex flex-wrap gap-2">
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                   <button
                     type="button"
                     disabled={savingId === post.id}
                     onClick={() => handleSaveEdit(post.id)}
-                    className="rounded-lg bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+                    className="btn-3d-primary"
                   >
-                    {savingId === post.id ? "Saving..." : "Save"}
+                    {savingId === post.id ? "⏳ Saving…" : "💾 Save"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setEditingId(null)}
-                    className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50"
+                    className="btn-3d-ghost"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              <p className="mt-5 whitespace-pre-wrap break-words">
+              <p
+                style={{
+                  marginTop: "1rem",
+                  whiteSpace: "pre-wrap",
+
+                  lineHeight: 1.65,
+                  color: "oklch(0.85 0.02 265)",
+                  fontSize: "0.9375rem",
+                }}
+              >
                 {post.content}
               </p>
             )}
 
-            <p className="mt-3 text-xs text-gray-400">
-              {new Date(post.createdAt).toLocaleString()}
+            {/* Timestamp */}
+            <p style={{ marginTop: "0.625rem", fontSize: "0.75rem", color: "oklch(0.45 0.03 265)" }}>
+              🕐 {new Date(post.createdAt).toLocaleString()}
             </p>
 
-            <div className="mt-4 border-t pt-3">
-              <span className="text-sm text-gray-500">
+            {/* Like count */}
+            <div
+              style={{
+                marginTop: "0.875rem",
+                paddingTop: "0.75rem",
+                borderTop: "1px solid oklch(0.22 0.04 265 / 50%)",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.375rem",
+              }}
+            >
+              <span style={{ fontSize: "0.8125rem", color: "oklch(0.55 0.06 25)" }}>❤️</span>
+              <span style={{ fontSize: "0.8125rem", color: "oklch(0.6 0.04 265)", fontWeight: 500 }}>
                 {post.likeCount} {post.likeCount === 1 ? "Like" : "Likes"}
               </span>
             </div>
 
-            <div className="mt-3 flex flex-wrap gap-2">
+            {/* Action buttons */}
+            <div style={{ marginTop: "0.75rem", display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
               <button
                 type="button"
                 onClick={() => handleLike(post.id)}
                 disabled={likingId === post.id}
                 aria-pressed={post.isLiked}
-                className="rounded-lg border px-4 py-2 text-sm transition hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-black disabled:opacity-50"
+                className={`btn-3d-ghost like-btn-3d ${post.isLiked ? "liked" : ""}`}
               >
                 {post.isLiked ? "❤️ Liked" : "🤍 Like"}
               </button>
 
               <Link
                 href={`/post/${post.id}`}
-                className="rounded-lg border px-4 py-2 text-sm transition hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-black"
+                className="btn-3d-ghost"
+                style={{ textDecoration: "none" }}
               >
                 💬 Comment
               </Link>
@@ -328,9 +397,9 @@ export default function PostFeed({ onRefreshReady }: PostFeedProps) {
                     setEditingId(post.id);
                     setEditContent(post.content);
                   }}
-                  className="rounded-lg border px-4 py-2 text-sm transition hover:bg-gray-100"
+                  className="btn-3d-ghost"
                 >
-                  Edit
+                  ✏️ Edit
                 </button>
               )}
 
@@ -338,31 +407,34 @@ export default function PostFeed({ onRefreshReady }: PostFeedProps) {
                 <button
                   type="button"
                   onClick={() => setConfirmDeleteId(post.id)}
-                  className="rounded-lg bg-red-500 px-4 py-2 text-sm text-white transition hover:bg-red-600"
+                  className="btn-3d-danger"
                 >
-                  Delete
+                  🗑️ Delete
                 </button>
               )}
             </div>
 
+            {/* Delete confirmation */}
             {confirmDeleteId === post.id && (
-              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
-                <p className="text-sm font-medium text-red-800">
-                  Delete this post? This cannot be undone.
+              <div className="danger-zone-3d" style={{ marginTop: "1rem" }}>
+                <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "oklch(0.78 0.2 25)", marginBottom: "0.75rem" }}>
+                  ⚠️ Delete this post? This cannot be undone.
                 </p>
-                <div className="mt-3 flex gap-2">
+                <div style={{ display: "flex", gap: "0.5rem" }}>
                   <button
                     type="button"
                     disabled={deletingId === post.id}
                     onClick={() => handleDelete(post.id)}
-                    className="rounded-lg bg-red-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+                    className="btn-3d-danger"
+                    style={{ fontSize: "0.8125rem", padding: "0.375rem 0.75rem" }}
                   >
-                    {deletingId === post.id ? "Deleting..." : "Confirm delete"}
+                    {deletingId === post.id ? "⏳ Deleting…" : "✓ Confirm delete"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setConfirmDeleteId(null)}
-                    className="rounded-lg border bg-white px-3 py-1.5 text-sm"
+                    className="btn-3d-ghost"
+                    style={{ fontSize: "0.8125rem", padding: "0.375rem 0.75rem" }}
                   >
                     Cancel
                   </button>

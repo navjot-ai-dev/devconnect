@@ -55,8 +55,64 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-3 rounded-xl border bg-white p-4 sm:p-5"
+      className="card-3d"
+      style={{ padding: "1.25rem" }}
     >
+      <div
+        style={{
+          marginBottom: "0.875rem",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "0.75rem",
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span
+            style={{
+              display: "inline-flex",
+              width: "2rem",
+              height: "2rem",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "0.625rem",
+              background: "linear-gradient(135deg, oklch(0.75 0.2 270), oklch(0.78 0.22 300))",
+              boxShadow: "0 10px 24px oklch(0.65 0.22 270 / 20%)",
+            }}
+          >
+            ✍️
+          </span>
+          <span
+            style={{
+              fontSize: "1rem",
+              background: "linear-gradient(135deg, oklch(0.75 0.2 270), oklch(0.78 0.22 300))",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              fontWeight: 700,
+            }}
+          >
+            Share an update
+          </span>
+        </div>
+
+        <span
+          style={{
+            fontSize: "0.7rem",
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+            color: "oklch(0.6 0.04 265)",
+            border: "1px solid oklch(0.25 0.04 265 / 55%)",
+            borderRadius: "9999px",
+            padding: "0.3rem 0.6rem",
+            background: "oklch(0.12 0.02 265 / 60%)",
+          }}
+        >
+          Community
+        </span>
+      </div>
+
       <label htmlFor="post-content" className="sr-only">
         Create a post
       </label>
@@ -64,18 +120,20 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
         id="post-content"
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder="What's on your mind?"
-        className="w-full rounded-lg border p-3 focus-visible:ring-2 focus-visible:ring-black"
+        placeholder="What's on your mind? Share code, ideas, questions…"
+        className="input-3d"
         rows={4}
       />
 
-      <button
-        type="submit"
-        disabled={loading || !content.trim()}
-        className="rounded-lg bg-black px-5 py-2 text-white hover:opacity-90 focus-visible:ring-2 focus-visible:ring-black disabled:opacity-50"
-      >
-        {loading ? "Posting..." : "Post"}
-      </button>
+      <div style={{ marginTop: "0.875rem", display: "flex", justifyContent: "flex-end" }}>
+        <button
+          type="submit"
+          disabled={loading || !content.trim()}
+          className="btn-3d-primary"
+        >
+          {loading ? "⏳ Posting…" : "🚀 Publish"}
+        </button>
+      </div>
     </form>
   );
 }

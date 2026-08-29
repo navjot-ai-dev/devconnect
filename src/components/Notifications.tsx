@@ -168,49 +168,90 @@ export default function Notifications() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-2xl p-4 sm:p-6">
-        <p className="text-gray-500">Loading notifications...</p>
+      <main style={{ maxWidth: "42rem", margin: "0 auto", padding: "1.5rem 1rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="card-3d" style={{ padding: "1rem", opacity: 1 - i * 0.18 }}>
+              <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                <div className="skeleton-3d" style={{ width: "3rem", height: "3rem", borderRadius: "50%", flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div className="skeleton-3d" style={{ height: "0.875rem", width: "55%", marginBottom: "0.4rem" }} />
+                  <div className="skeleton-3d" style={{ height: "0.75rem", width: "30%" }} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-2xl p-4 sm:p-6">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold sm:text-3xl">
-            Notifications
-          </h1>
+    <main style={{ maxWidth: "42rem", margin: "0 auto", padding: "1.5rem 1rem" }}>
+      {/* Header */}
+      <div
+        style={{
+          marginBottom: "1.5rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.75rem",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+          <div>
+            <h1
+              style={{
+                fontSize: "clamp(1.5rem, 4vw, 2rem)",
+                fontWeight: 800,
+                letterSpacing: "-0.02em",
+                background: "linear-gradient(135deg, oklch(0.75 0.2 270), oklch(0.78 0.22 300), oklch(0.7 0.25 320))",
+                backgroundSize: "200% 200%",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                animation: "gradient-shift 3s ease infinite",
+                lineHeight: 1.1,
+              }}
+            >
+              🔔 Notifications
+            </h1>
+            {unreadCount > 0 && (
+              <p style={{ marginTop: "0.35rem", fontSize: "0.875rem", color: "oklch(0.6 0.04 265)" }}>
+                <span className="badge-3d" style={{ marginRight: "0.4rem" }}>{unreadCount}</span>
+                unread
+              </p>
+            )}
+          </div>
+
           {unreadCount > 0 && (
-            <p className="mt-1 text-sm text-gray-500">
-              {unreadCount} unread
-            </p>
+            <button
+              type="button"
+              onClick={markAllAsRead}
+              disabled={markingAll}
+              className="btn-3d-ghost"
+            >
+              {markingAll ? "⏳ Marking…" : "✓ Mark all as read"}
+            </button>
           )}
         </div>
-
-        {unreadCount > 0 && (
-          <button
-            type="button"
-            onClick={markAllAsRead}
-            disabled={markingAll}
-            className="rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-black disabled:opacity-50"
-          >
-            {markingAll ? "Marking..." : "Mark all as read"}
-          </button>
-        )}
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-red-700">
-          {error}
+        <div className="card-3d danger-zone-3d" style={{ padding: "1.5rem", textAlign: "center" }}>
+          <p style={{ color: "oklch(0.75 0.22 25)" }}>⚠️ {error}</p>
         </div>
       ) : notifications.length === 0 ? (
-        <div className="rounded-xl border p-8 text-center">
-          <p className="text-gray-500">No notifications yet.</p>
+        <div className="card-3d" style={{ padding: "3rem 1.5rem", textAlign: "center" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "1rem", animation: "float 3s ease-in-out infinite" }}>
+            🔕
+          </div>
+          <p style={{ color: "oklch(0.6 0.04 265)", fontWeight: 500 }}>
+            No notifications yet.
+          </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {notifications.map((notification) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          {notifications.map((notification, index) => (
             <article
               key={notification.id}
               role="button"
@@ -222,45 +263,47 @@ export default function Notifications() {
                   handleNotificationClick(notification);
                 }
               }}
-              className={`cursor-pointer rounded-xl border p-4 transition focus-visible:ring-2 focus-visible:ring-black ${
-                !notification.read
-                  ? "bg-blue-50 hover:bg-blue-100"
-                  : "hover:bg-gray-50"
-              }`}
+              className={`notification-3d stagger-${Math.min(index + 1, 5)} ${!notification.read ? "unread" : ""}`}
+              style={{ padding: "1rem" }}
             >
-              <div className="flex items-start gap-3">
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
                 {notification.actorImage ? (
                   <img
                     src={notification.actorImage}
                     alt={notification.actorName}
-                    className="h-12 w-12 shrink-0 rounded-full object-cover"
+                    className="avatar-3d"
+                    style={{ width: "3rem", height: "3rem", objectFit: "cover", flexShrink: 0 }}
                   />
                 ) : (
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-200 text-lg font-bold">
+                  <div
+                    className="avatar-placeholder-3d"
+                    style={{ width: "3rem", height: "3rem", fontSize: "1.125rem", flexShrink: 0 }}
+                  >
                     {notification.actorName.charAt(0).toUpperCase()}
                   </div>
                 )}
 
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium break-words">
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <p style={{ fontWeight: 500, color: "oklch(0.9 0.02 265)" }}>
                     {notificationCopy(notification)}
                   </p>
 
                   {notification.actorUsername && (
-                    <p className="text-sm text-gray-500">
+                    <p style={{ fontSize: "0.8125rem", color: "oklch(0.55 0.05 270)" }}>
                       @{notification.actorUsername}
                     </p>
                   )}
 
-                  <p className="mt-1 text-xs text-gray-400">
-                    {new Date(notification.createdAt).toLocaleString()}
+                  <p style={{ marginTop: "0.25rem", fontSize: "0.75rem", color: "oklch(0.45 0.03 265)" }}>
+                    🕐 {new Date(notification.createdAt).toLocaleString()}
                   </p>
                 </div>
 
                 {!notification.read && (
                   <span
-                    className="mt-2 h-3 w-3 shrink-0 rounded-full bg-blue-500"
+                    className="unread-dot"
                     aria-label="Unread"
+                    style={{ width: "0.75rem", height: "0.75rem", flexShrink: 0, marginTop: "0.25rem" }}
                   />
                 )}
               </div>
@@ -269,9 +312,20 @@ export default function Notifications() {
         </div>
       )}
 
-      <p className="mt-6 text-sm text-gray-400">
-        <Link href="/home" className="hover:underline">
-          Back to home
+      <p style={{ marginTop: "1.5rem", fontSize: "0.875rem", color: "oklch(0.45 0.03 265)" }}>
+        <Link
+          href="/home"
+          style={{ color: "oklch(0.65 0.22 270)", textDecoration: "none", transition: "all 0.2s" }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = "oklch(0.75 0.2 270)";
+            e.currentTarget.style.textShadow = "0 0 12px oklch(0.65 0.22 270 / 50%)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = "oklch(0.65 0.22 270)";
+            e.currentTarget.style.textShadow = "";
+          }}
+        >
+          ← Back to home
         </Link>
       </p>
     </main>

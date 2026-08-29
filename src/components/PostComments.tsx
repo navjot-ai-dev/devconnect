@@ -127,30 +127,57 @@ export default function PostComments({
   }, [initialComments]);
 
   return (
-    <section className="mt-8">
-      <h2 className="mb-4 text-xl font-bold">Comments</h2>
+    <section style={{ marginTop: "2rem" }}>
+      <h2
+        style={{
+          marginBottom: "1rem",
+          fontSize: "1.25rem",
+          fontWeight: 800,
+          letterSpacing: "-0.02em",
+          background: "linear-gradient(135deg, oklch(0.75 0.2 270), oklch(0.78 0.22 300))",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}
+      >
+        💬 Comments
+      </h2>
 
       <CommentForm postId={postId} onCommentCreated={fetchComments} />
 
-      <div className="mt-6 space-y-4">
+      <div style={{ marginTop: "1.25rem", display: "flex", flexDirection: "column", gap: "0.875rem" }}>
         {comments.length === 0 ? (
-          <div className="rounded-xl border p-6 text-center">
-            <p className="text-gray-500">No comments yet.</p>
+          <div className="card-3d" style={{ padding: "2rem 1.5rem", textAlign: "center" }}>
+            <div style={{ fontSize: "2rem", marginBottom: "0.75rem", animation: "float 3s ease-in-out infinite" }}>
+              💭
+            </div>
+            <p style={{ color: "oklch(0.6 0.04 265)", fontWeight: 500 }}>
+              No comments yet. Be the first!
+            </p>
           </div>
         ) : (
-          comments.map((comment) => (
-            <article key={comment.id} className="rounded-xl border p-4">
-              <div className="flex items-center gap-3">
+          comments.map((comment, index) => (
+            <article
+              key={comment.id}
+              className={`card-3d stagger-${Math.min(index + 1, 5)}`}
+              style={{ padding: "1rem" }}
+            >
+              {/* Author row */}
+              <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
                 {comment.username ? (
-                  <Link href={`/profile/${comment.username}`}>
+                  <Link href={`/profile/${comment.username}`} style={{ flexShrink: 0 }}>
                     {comment.image ? (
                       <img
                         src={comment.image}
                         alt={comment.name}
-                        className="h-10 w-10 rounded-full object-cover"
+                        className="avatar-3d"
+                        style={{ width: "2.5rem", height: "2.5rem", objectFit: "cover" }}
                       />
                     ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 font-bold">
+                      <div
+                        className="avatar-placeholder-3d"
+                        style={{ width: "2.5rem", height: "2.5rem", fontSize: "1rem" }}
+                      >
                         {comment.name.charAt(0).toUpperCase()}
                       </div>
                     )}
@@ -159,10 +186,14 @@ export default function PostComments({
                   <img
                     src={comment.image}
                     alt={comment.name}
-                    className="h-10 w-10 rounded-full object-cover"
+                    className="avatar-3d"
+                    style={{ width: "2.5rem", height: "2.5rem", objectFit: "cover", flexShrink: 0 }}
                   />
                 ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 font-bold">
+                  <div
+                    className="avatar-placeholder-3d"
+                    style={{ width: "2.5rem", height: "2.5rem", fontSize: "1rem", flexShrink: 0 }}
+                  >
                     {comment.name.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -171,67 +202,78 @@ export default function PostComments({
                   {comment.username ? (
                     <Link
                       href={`/profile/${comment.username}`}
-                      className="font-medium hover:underline"
+                      style={{ fontWeight: 600, color: "oklch(0.9 0.02 265)", textDecoration: "none" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = "oklch(0.75 0.2 270)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = "oklch(0.9 0.02 265)")}
                     >
                       {comment.name}
                     </Link>
                   ) : (
-                    <p className="font-medium">{comment.name}</p>
+                    <p style={{ fontWeight: 600, color: "oklch(0.9 0.02 265)" }}>{comment.name}</p>
                   )}
 
                   {comment.username && (
-                    <p className="text-xs text-gray-500">
+                    <p style={{ fontSize: "0.75rem", color: "oklch(0.55 0.05 270)" }}>
                       @{comment.username}
                     </p>
                   )}
                 </div>
               </div>
 
+              {/* Content / Edit */}
               {editingId === comment.id ? (
-                <div className="mt-3 space-y-2">
-                  <label
-                    className="sr-only"
-                    htmlFor={`edit-comment-${comment.id}`}
-                  >
+                <div style={{ marginTop: "0.75rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <label className="sr-only" htmlFor={`edit-comment-${comment.id}`}>
                     Edit comment
                   </label>
                   <textarea
                     id={`edit-comment-${comment.id}`}
                     value={editContent}
                     onChange={(event) => setEditContent(event.target.value)}
-                    className="w-full rounded-lg border p-3"
+                    className="input-3d"
                     rows={3}
                   />
-                  <div className="flex gap-2">
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
                     <button
                       type="button"
                       disabled={savingId === comment.id}
                       onClick={() => handleSaveEdit(comment.id)}
-                      className="rounded-lg bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
+                      className="btn-3d-primary"
+                      style={{ fontSize: "0.8125rem", padding: "0.375rem 0.75rem" }}
                     >
-                      {savingId === comment.id ? "Saving..." : "Save"}
+                      {savingId === comment.id ? "⏳ Saving…" : "💾 Save"}
                     </button>
                     <button
                       type="button"
                       onClick={() => setEditingId(null)}
-                      className="rounded-lg border px-3 py-1 text-sm"
+                      className="btn-3d-ghost"
+                      style={{ fontSize: "0.8125rem", padding: "0.375rem 0.75rem" }}
                     >
                       Cancel
                     </button>
                   </div>
                 </div>
               ) : (
-                <p className="mt-3 whitespace-pre-wrap break-words">
+                <p
+                  style={{
+                    marginTop: "0.625rem",
+                    whiteSpace: "pre-wrap",
+
+                    lineHeight: 1.6,
+                    color: "oklch(0.82 0.02 265)",
+                    fontSize: "0.9rem",
+                  }}
+                >
                   {comment.content}
                 </p>
               )}
 
-              <p className="mt-2 text-xs text-gray-400">
-                {new Date(comment.createdAt).toLocaleString()}
+              <p style={{ marginTop: "0.375rem", fontSize: "0.725rem", color: "oklch(0.45 0.03 265)" }}>
+                🕐 {new Date(comment.createdAt).toLocaleString()}
               </p>
 
               {comment.userId === currentUserId && (
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div style={{ marginTop: "0.625rem", display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                   {editingId !== comment.id && (
                     <button
                       type="button"
@@ -239,42 +281,44 @@ export default function PostComments({
                         setEditingId(comment.id);
                         setEditContent(comment.content);
                       }}
-                      className="rounded-lg border px-3 py-1 text-sm hover:bg-gray-50"
+                      className="btn-3d-ghost"
+                      style={{ fontSize: "0.8125rem", padding: "0.3rem 0.75rem" }}
                     >
-                      Edit
+                      ✏️ Edit
                     </button>
                   )}
                   <button
                     type="button"
                     onClick={() => setConfirmDeleteId(comment.id)}
                     disabled={deletingId === comment.id}
-                    className="rounded-lg bg-red-500 px-3 py-1 text-sm text-white disabled:opacity-50"
+                    className="btn-3d-danger"
+                    style={{ fontSize: "0.8125rem", padding: "0.3rem 0.75rem" }}
                   >
-                    Delete
+                    🗑️ Delete
                   </button>
                 </div>
               )}
 
               {confirmDeleteId === comment.id && (
-                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3">
-                  <p className="text-sm text-red-800">
-                    Delete this comment?
+                <div className="danger-zone-3d" style={{ marginTop: "0.75rem" }}>
+                  <p style={{ fontSize: "0.8125rem", fontWeight: 600, color: "oklch(0.78 0.2 25)", marginBottom: "0.625rem" }}>
+                    ⚠️ Delete this comment?
                   </p>
-                  <div className="mt-2 flex gap-2">
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
                     <button
                       type="button"
                       disabled={deletingId === comment.id}
                       onClick={() => handleDelete(comment.id)}
-                      className="rounded-lg bg-red-600 px-3 py-1 text-sm text-white disabled:opacity-50"
+                      className="btn-3d-danger"
+                      style={{ fontSize: "0.8125rem", padding: "0.3rem 0.625rem" }}
                     >
-                      {deletingId === comment.id
-                        ? "Deleting..."
-                        : "Confirm"}
+                      {deletingId === comment.id ? "⏳ Deleting…" : "✓ Confirm"}
                     </button>
                     <button
                       type="button"
                       onClick={() => setConfirmDeleteId(null)}
-                      className="rounded-lg border bg-white px-3 py-1 text-sm"
+                      className="btn-3d-ghost"
+                      style={{ fontSize: "0.8125rem", padding: "0.3rem 0.625rem" }}
                     >
                       Cancel
                     </button>

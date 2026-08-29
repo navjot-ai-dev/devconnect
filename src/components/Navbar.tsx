@@ -43,62 +43,73 @@ export default function Navbar() {
     <>
       <Link
         href="/home"
-        className="font-medium hover:text-blue-600"
+        className="nav-link-3d"
         onClick={() => setMenuOpen(false)}
       >
-        Home
+        🏠 Home
       </Link>
       <Link
         href="/search"
-        className="font-medium hover:text-blue-600"
+        className="nav-link-3d"
         onClick={() => setMenuOpen(false)}
       >
-        Search
+        🔍 Search
       </Link>
       <Link
         href="/notifications"
-        className="relative font-medium hover:text-blue-600"
+        className="nav-link-3d relative"
         onClick={() => setMenuOpen(false)}
       >
-        Notifications
+        🔔 Notifications
         {unreadCount > 0 && (
-          <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white">
+          <span className="badge-3d ml-1.5">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </Link>
       <Link
         href="/profile"
-        className="font-medium hover:text-blue-600"
+        className="nav-link-3d"
         onClick={() => setMenuOpen(false)}
       >
-        Profile
+        👤 Profile
       </Link>
     </>
   );
 
   return (
-    <nav className="sticky top-0 z-40 border-b bg-white">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-        <Link href="/home" className="text-lg font-bold sm:text-xl">
-          DevConnect
+    <nav className="navbar-3d">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
+        <Link href="/home" className="logo-3d text-xl sm:text-2xl">
+          ⟨/⟩ DevConnect
         </Link>
 
-        <div className="hidden items-center gap-5 md:flex">{links}</div>
+        <div className="hidden items-center gap-1 md:flex">{links}</div>
 
         <button
           type="button"
-          className="rounded-lg border px-3 py-2 text-sm md:hidden"
+          className="btn-3d-ghost md:hidden"
           aria-expanded={menuOpen}
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           onClick={() => setMenuOpen((open) => !open)}
         >
-          Menu
+          {menuOpen ? "✕ Close" : "☰ Menu"}
         </button>
       </div>
 
       {menuOpen && (
-        <div className="flex flex-col gap-3 border-t px-4 py-4 md:hidden">
+        <div
+          style={{
+            background: "linear-gradient(180deg, oklch(0.11 0.025 265 / 95%), oklch(0.09 0.02 265 / 98%))",
+            backdropFilter: "blur(20px)",
+            borderTop: "1px solid oklch(0.25 0.04 265 / 50%)",
+            padding: "1rem",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.5rem",
+          }}
+          className="md:hidden"
+        >
           {links}
         </div>
       )}
