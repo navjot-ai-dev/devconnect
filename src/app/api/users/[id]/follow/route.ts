@@ -1,10 +1,9 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import {
-  follows,
-  notifications,
-} from "@/db/schema";
-import { and, eq } from "drizzle-orm";
+import { follows, notifications, user } from "@/db/schema";
+import { jsonError, jsonSuccess } from "@/lib/http";
+import { createNotification } from "@/lib/notifications";
+import { and, eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 
 type Props = {
@@ -13,148 +12,107 @@ type Props = {
   }>;
 };
 
+async function getFollowCounts(userId: string) {
+  const [followersResult] = await db
+    .select({
+      count: sql<number>`count(*)`.mapWith(Number),
+    })
+    .from(follows)
+    .where(eq(follows.followingId, userId));
+
+  const [followingResult] = await db
+    .select({
+      count: sql<number>`count(*)`.mapWith(Number),
+    })
+    .from(follows)
+    .where(eq(follows.followerId, userId));
+
+  return {
+    followersCount: followersResult?.count ?? 0,
+    followingCount: followingResult?.count ?? 0,
+  };
+}
+
 export async function POST(
   request: Request,
   { params }: Props
 ) {
   try {
-    // =========================
-    // GET SESSION
-    // =========================
-
     const session = await auth.api.getSession({
       headers: await headers(),
     });
 
-
-
     if (!session) {
-      return Response.json(
-        {
-          error: "Unauthorized",
-        },
-        {
-          status: 401,
-        }
-      );
+      return jsonError("Unauthorized", 401);
     }
 
-    console.log("CURRENT USER:", session.user.id);
-
-    // =========================
-    // GET TARGET USER
-    // =========================
-
-    const { id: targetUserId } =
-      await params;
-
-    // =========================
-    // CANNOT FOLLOW YOURSELF
-      // =========================
+    const { id: targetUserId } = await params;
 
     if (session.user.id === targetUserId) {
-      return Response.json(
-        {
-          error: "You cannot follow yourself",
-        },
-        {
-          status: 400,
-        }
-      );
+      return jsonError("You cannot follow yourself", 400);
     }
 
-    // =========================
-    // CHECK EXISTING FOLLOW
-    // =========================
+    const [targetUser] = await db
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.id, targetUserId))
+      .limit(1);
+
+    if (!targetUser) {
+      return jsonError("User not found", 404);
+    }
 
     const [existingFollow] = await db
       .select()
       .from(follows)
       .where(
         and(
-          eq(
-            follows.followerId,
-            session.user.id
-          ),
-          eq(
-            follows.followingId,
-            targetUserId
-          )
+          eq(follows.followerId, session.user.id),
+          eq(follows.followingId, targetUserId)
         )
       )
       .limit(1);
-
-    // =========================
-    // UNFOLLOW
-    // =========================
 
     if (existingFollow) {
       await db
         .delete(follows)
         .where(
           and(
-            eq(
-              follows.followerId,
-              session.user.id
-            ),
-            eq(
-              follows.followingId,
-              targetUserId
-            )
+            eq(follows.followerId, session.user.id),
+            eq(follows.followingId, targetUserId)
           )
         );
 
-      return Response.json({
-        success: true,
+      const counts = await getFollowCounts(targetUserId);
+
+      return jsonSuccess({
         following: false,
         message: "User unfollowed",
+        ...counts,
       });
     }
-
-    // =========================
-    // FOLLOW
-    // =========================
 
     await db.insert(follows).values({
       followerId: session.user.id,
       followingId: targetUserId,
     });
 
-    // =========================
-    // CREATE NOTIFICATION
-    // =========================
-
-    await db.insert(notifications).values({
-      id: crypto.randomUUID(),
-
+    await createNotification({
       recipientId: targetUserId,
-
       actorId: session.user.id,
-
       type: "follow",
-
-      read: false,
     });
 
-    return Response.json({
-      success: true,
+    const counts = await getFollowCounts(targetUserId);
+
+    return jsonSuccess({
       following: true,
       message: "User followed",
+      ...counts,
     });
   } catch (error) {
-    console.error(
-      "FOLLOW_ERROR:",
-      error
-    );
+    console.error("FOLLOW_ERROR:", error);
 
-    return Response.json(
-      {
-        success: false,
-        error: "Failed to follow user",
-      },
-      {
-        status: 500,
-      }
-    );
+    return jsonError("Failed to follow user", 500);
   }
 }

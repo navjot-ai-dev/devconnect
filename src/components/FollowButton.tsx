@@ -18,6 +18,8 @@ export default function FollowButton({
     useState(false);
 
   async function handleFollow() {
+    if (loading) return;
+
     setLoading(true);
 
     try {
@@ -32,19 +34,13 @@ export default function FollowButton({
       const data = await response.json();
 
       if (!response.ok) {
-        alert(
-          data.error ||
-            "Failed to follow user"
-        );
+        alert(data.error || "Something went wrong");
         return;
       }
 
       setFollowing(data.following);
     } catch (error) {
-      console.error(
-        "FOLLOW ERROR:",
-        error
-      );
+      console.error("FOLLOW ERROR:", error);
     } finally {
       setLoading(false);
     }
@@ -54,7 +50,11 @@ export default function FollowButton({
     <button
       onClick={handleFollow}
       disabled={loading}
-      className="mt-6 rounded-lg bg-black px-5 py-2 text-white transition hover:opacity-80 disabled:opacity-50"
+      className={`mt-6 rounded-lg px-5 py-2 font-medium transition disabled:opacity-50 ${
+        following
+          ? "border border-gray-300 bg-white text-black hover:bg-gray-100"
+          : "bg-black text-white hover:opacity-80"
+      }`}
     >
       {loading
         ? "Loading..."

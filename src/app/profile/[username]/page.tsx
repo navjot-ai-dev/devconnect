@@ -10,6 +10,7 @@ import {
 } from "drizzle-orm";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import FollowButton from "@/components/FollowButton";
 
 type Props = {
@@ -114,21 +115,17 @@ export default async function PublicProfilePage({
     initialFollowing = !!existingFollow;
   }
 
-  // =========================
-  // UI
-  // =========================
-
   return (
     <main className="min-h-screen p-6">
       <div className="mx-auto max-w-2xl">
 
         {/* =========================
-            PROFILE
+            PROFILE CARD
         ========================= */}
 
         <div className="rounded-xl border p-6">
 
-          {/* PROFILE IMAGE */}
+          {/* IMAGE */}
 
           {profile.image ? (
             <img
@@ -170,7 +167,10 @@ export default async function PublicProfilePage({
 
             {/* POSTS */}
 
-            <div>
+            <Link
+              href={`/profile/${profile.username}`}
+              className="rounded-lg p-2 text-center transition hover:bg-gray-100"
+            >
               <p className="font-bold">
                 {postCount?.count ?? 0}
               </p>
@@ -178,11 +178,14 @@ export default async function PublicProfilePage({
               <p className="text-sm text-gray-500">
                 Posts
               </p>
-            </div>
+            </Link>
 
             {/* FOLLOWERS */}
 
-            <div>
+            <Link
+              href={`/profile/${profile.username}/followers`}
+              className="rounded-lg p-2 text-center transition hover:bg-gray-100"
+            >
               <p className="font-bold">
                 {followersCount?.count ?? 0}
               </p>
@@ -190,11 +193,14 @@ export default async function PublicProfilePage({
               <p className="text-sm text-gray-500">
                 Followers
               </p>
-            </div>
+            </Link>
 
             {/* FOLLOWING */}
 
-            <div>
+            <Link
+              href={`/profile/${profile.username}/following`}
+              className="rounded-lg p-2 text-center transition hover:bg-gray-100"
+            >
               <p className="font-bold">
                 {followingCount?.count ?? 0}
               </p>
@@ -202,7 +208,7 @@ export default async function PublicProfilePage({
               <p className="text-sm text-gray-500">
                 Following
               </p>
-            </div>
+            </Link>
 
           </div>
 
@@ -242,26 +248,21 @@ export default async function PublicProfilePage({
             <div className="space-y-4">
 
               {profilePosts.map((post) => (
-                <article
+                <Link
                   key={post.id}
-                  className="rounded-xl border p-5"
+                  href={`/post/${post.id}`}
+                  className="block rounded-xl border p-5 transition hover:bg-gray-50"
                 >
-
-                  {/* POST CONTENT */}
-
                   <p className="whitespace-pre-wrap">
                     {post.content}
                   </p>
-
-                  {/* DATE */}
 
                   <p className="mt-3 text-xs text-gray-400">
                     {new Date(
                       post.createdAt
                     ).toLocaleString()}
                   </p>
-
-                </article>
+                </Link>
               ))}
 
             </div>
@@ -273,4 +274,3 @@ export default async function PublicProfilePage({
     </main>
   );
 }
-

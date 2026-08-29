@@ -1,12 +1,13 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { likes, posts, user } from "@/db/schema";
+import { jsonError, jsonSuccess, readJson } from "@/lib/http";
+import {
+  formatZodError,
+  postContentSchema,
+} from "@/lib/validations";
 import { desc, eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
-
-// ========================
-// CREATE POST
-// ========================
 
 export async function POST(request: Request) {
   try {
@@ -15,20 +16,19 @@ export async function POST(request: Request) {
     });
 
     if (!session) {
-      return Response.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return jsonError("Unauthorized", 401);
     }
 
-    const body = await request.json();
-    const content = body.content?.trim();
+    const parsed = await readJson<{ content?: string }>(request);
 
-    if (!content) {
-      return Response.json(
-        { error: "Post content is required" },
-        { status: 400 }
-      );
+    if (!parsed.ok) {
+      return parsed.response;
+    }
+
+    const parsedContent = postContentSchema.safeParse(parsed.data);
+
+    if (!parsedContent.success) {
+      return jsonError(formatZodError(parsedContent.error), 400);
     }
 
     const newPost = await db
@@ -36,34 +36,26 @@ export async function POST(request: Request) {
       .values({
         id: crypto.randomUUID(),
         userId: session.user.id,
-        content,
+        content: parsedContent.data.content,
       })
       .returning();
 
-    return Response.json(
+    return jsonSuccess(
       {
-        success: true,
         post: {
           ...newPost[0],
           likeCount: 0,
           isLiked: false,
         },
       },
-      { status: 201 }
+      201
     );
   } catch (error) {
     console.error("CREATE_POST_ERROR:", error);
 
-    return Response.json(
-      { error: "Failed to create post" },
-      { status: 500 }
-    );
+    return jsonError("Failed to create post", 500);
   }
 }
-
-// ========================
-// GET POSTS
-// ========================
 
 export async function GET() {
   try {
@@ -77,18 +69,12 @@ export async function GET() {
         userId: posts.userId,
         content: posts.content,
         createdAt: posts.createdAt,
-
-        // User information
         name: user.name,
         username: user.username,
         image: user.image,
-
-        // Like count
         likeCount: sql<number>`
           count(${likes.userId})
         `.mapWith(Number),
-
-        // Is current user liked this post?
         isLiked: session
           ? sql<boolean>`
               exists (
@@ -103,22 +89,15 @@ export async function GET() {
       .from(posts)
       .innerJoin(user, eq(posts.userId, user.id))
       .leftJoin(likes, eq(posts.id, likes.postId))
-      .groupBy(
-        posts.id,
-        user.id
-      )
+      .groupBy(posts.id, user.id)
       .orderBy(desc(posts.createdAt));
 
-    return Response.json({
-      success: true,
+    return jsonSuccess({
       posts: allPosts,
     });
   } catch (error) {
     console.error("GET_POSTS_ERROR:", error);
 
-    return Response.json(
-      { error: "Failed to get posts" },
-      { status: 500 }
-    );
+    return jsonError("Failed to get posts", 500);
   }
 }

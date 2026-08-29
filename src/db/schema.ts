@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -6,6 +6,7 @@ import {
   boolean,
   index,
   primaryKey,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 // ====================
@@ -291,6 +292,13 @@ export const notifications = pgTable(
 
     type: text("type").notNull(),
 
+    postId: text("post_id").references(
+      () => posts.id,
+      {
+        onDelete: "cascade",
+      }
+    ),
+
     read: boolean("read")
       .default(false)
       .notNull(),
@@ -298,7 +306,18 @@ export const notifications = pgTable(
     createdAt: timestamp("created_at")
       .defaultNow()
       .notNull(),
-  }
+  },
+  (table) => [
+    index("notifications_recipient_id_idx").on(
+      table.recipientId
+    ),
+    index("notifications_post_id_idx").on(
+      table.postId
+    ),
+    uniqueIndex("notifications_like_unique")
+      .on(table.actorId, table.postId)
+      .where(sql`${table.type} = 'like'`),
+  ]
 );
 
 // ====================
@@ -387,6 +406,8 @@ export const postRelations = relations(
     comments: many(comments),
 
     likes: many(likes),
+
+    notifications: many(notifications),
   })
 );
 
@@ -473,6 +494,11 @@ export const notificationRelations =
         references: [user.id],
         relationName:
           "notificationsSent",
+      }),
+
+      post: one(posts, {
+        fields: [notifications.postId],
+        references: [posts.id],
       }),
     })
   );
