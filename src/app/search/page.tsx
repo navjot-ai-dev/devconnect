@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 type User = {
@@ -16,10 +17,16 @@ export default function SearchPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
 
-  async function searchUsers(value: string) {
-    setQuery(value);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      searchUsers();
+    }, 400);
 
-    if (!value.trim()) {
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  async function searchUsers() {
+    if (!query.trim()) {
       setUsers([]);
       return;
     }
@@ -28,52 +35,77 @@ export default function SearchPage() {
 
     try {
       const response = await fetch(
-        `/api/search/users?q=${encodeURIComponent(value)}`
+        `/api/users/search?q=${encodeURIComponent(
+          query
+        )}`,
+        {
+          credentials: "include",
+        }
       );
 
       const data = await response.json();
 
-      if (data.success) {
-        setUsers(data.users);
+      if (!response.ok) {
+        console.error(data.error);
+        setUsers([]);
+        return;
       }
+
+      setUsers(data.users || []);
     } catch (error) {
-      console.error("SEARCH ERROR:", error);
+      console.error("SEARCH USERS ERROR:", error);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="min-h-screen p-8">
+    <main className="min-h-screen p-6">
       <div className="mx-auto max-w-2xl">
 
         <h1 className="text-3xl font-bold">
-          🔎 Search Users
+          🔎 Search Developers
         </h1>
 
-        <input
-          value={query}
-          onChange={(e) =>
-            searchUsers(e.target.value)
-          }
-          placeholder="Search by name or username..."
-          className="mt-6 w-full rounded-xl border px-4 py-3 outline-none focus:ring-2"
-        />
+        <p className="mt-2 text-gray-500">
+          Find developers on DevConnect.
+        </p>
+
+        {/* SEARCH */}
+
+        <div className="mt-6">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) =>
+              setQuery(e.target.value)
+            }
+            placeholder="Search by name or username..."
+            className="w-full rounded-xl border px-4 py-3 outline-none focus:ring-2"
+          />
+        </div>
+
+        {/* LOADING */}
 
         {loading && (
-          <p className="mt-4 text-gray-500">
+          <p className="mt-6 text-gray-500">
             Searching...
           </p>
         )}
 
-        <div className="mt-6 space-y-4">
+        {/* RESULTS */}
+
+        <div className="mt-6 space-y-3">
 
           {!loading &&
             query &&
             users.length === 0 && (
-              <p className="text-gray-500">
-                No users found.
-              </p>
+              <div className="rounded-xl border p-6 text-center">
+                <p className="text-gray-500">
+                  No developers found.
+                </p>
+              </div>
             )}
 
           {users.map((user) => (
@@ -87,6 +119,8 @@ export default function SearchPage() {
               className="block rounded-xl border p-4 transition hover:bg-gray-50"
             >
               <div className="flex items-center gap-4">
+
+                {/* IMAGE */}
 
                 {user.image ? (
                   <img
@@ -102,19 +136,21 @@ export default function SearchPage() {
                   </div>
                 )}
 
+                {/* USER INFO */}
+
                 <div>
                   <p className="font-bold">
                     {user.name}
                   </p>
 
-                  <p className="text-sm text-gray-500">
-                    {user.username
-                      ? `@${user.username}`
-                      : "Username not set"}
-                  </p>
+                  {user.username && (
+                    <p className="text-sm text-gray-500">
+                      @{user.username}
+                    </p>
+                  )}
 
                   {user.bio && (
-                    <p className="mt-1 text-sm">
+                    <p className="mt-1 text-sm text-gray-600">
                       {user.bio}
                     </p>
                   )}
@@ -129,3 +165,4 @@ export default function SearchPage() {
     </main>
   );
 }
+

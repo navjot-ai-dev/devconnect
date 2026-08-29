@@ -1,7 +1,13 @@
+
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { follows, posts, user } from "@/db/schema";
-import { and, count, eq } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  sql,
+} from "drizzle-orm";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import FollowButton from "@/components/FollowButton";
@@ -18,7 +24,7 @@ export default async function PublicProfilePage({
   const { username } = await params;
 
   // =========================
-  // GET PROFILE
+  // GET USER
   // =========================
 
   const [profile] = await db
@@ -32,7 +38,46 @@ export default async function PublicProfilePage({
   }
 
   // =========================
-  // CURRENT SESSION
+  // PROFILE STATS
+  // =========================
+
+  const [postCount] = await db
+    .select({
+      count: sql<number>`count(*)`.mapWith(Number),
+    })
+    .from(posts)
+    .where(eq(posts.userId, profile.id));
+
+  const [followersCount] = await db
+    .select({
+      count: sql<number>`count(*)`.mapWith(Number),
+    })
+    .from(follows)
+    .where(eq(follows.followingId, profile.id));
+
+  const [followingCount] = await db
+    .select({
+      count: sql<number>`count(*)`.mapWith(Number),
+    })
+    .from(follows)
+    .where(eq(follows.followerId, profile.id));
+
+  // =========================
+  // GET POSTS
+  // =========================
+
+  const profilePosts = await db
+    .select({
+      id: posts.id,
+      content: posts.content,
+      createdAt: posts.createdAt,
+    })
+    .from(posts)
+    .where(eq(posts.userId, profile.id))
+    .orderBy(desc(posts.createdAt));
+
+  // =========================
+  // CURRENT USER
   // =========================
 
   const session = await auth.api.getSession({
@@ -40,47 +85,10 @@ export default async function PublicProfilePage({
   });
 
   // =========================
-  // POST COUNT
+  // CHECK FOLLOW STATUS
   // =========================
 
-  const [postCount] = await db
-    .select({
-      count: count(),
-    })
-    .from(posts)
-    .where(eq(posts.userId, profile.id));
-
-  // =========================
-  // FOLLOWER COUNT
-  // =========================
-
-  const [followerCount] = await db
-    .select({
-      count: count(),
-    })
-    .from(follows)
-    .where(
-      eq(follows.followingId, profile.id)
-    );
-
-  // =========================
-  // FOLLOWING COUNT
-  // =========================
-
-  const [followingCount] = await db
-    .select({
-      count: count(),
-    })
-    .from(follows)
-    .where(
-      eq(follows.followerId, profile.id)
-    );
-
-  // =========================
-  // IS CURRENT USER FOLLOWING?
-  // =========================
-
-  let isFollowing = false;
+  let initialFollowing = false;
 
   if (
     session &&
@@ -103,16 +111,20 @@ export default async function PublicProfilePage({
       )
       .limit(1);
 
-    isFollowing = !!existingFollow;
+    initialFollowing = !!existingFollow;
   }
 
   // =========================
-  // PAGE
+  // UI
   // =========================
 
   return (
     <main className="min-h-screen p-6">
       <div className="mx-auto max-w-2xl">
+
+        {/* =========================
+            PROFILE
+        ========================= */}
 
         <div className="rounded-xl border p-6">
 
@@ -150,13 +162,17 @@ export default async function PublicProfilePage({
             {profile.bio || "No bio yet."}
           </p>
 
-          {/* STATS */}
+          {/* =========================
+              STATS
+          ========================= */}
 
           <div className="mt-6 flex gap-8">
 
+            {/* POSTS */}
+
             <div>
               <p className="font-bold">
-                {postCount.count}
+                {postCount?.count ?? 0}
               </p>
 
               <p className="text-sm text-gray-500">
@@ -164,9 +180,11 @@ export default async function PublicProfilePage({
               </p>
             </div>
 
+            {/* FOLLOWERS */}
+
             <div>
               <p className="font-bold">
-                {followerCount.count}
+                {followersCount?.count ?? 0}
               </p>
 
               <p className="text-sm text-gray-500">
@@ -174,9 +192,11 @@ export default async function PublicProfilePage({
               </p>
             </div>
 
+            {/* FOLLOWING */}
+
             <div>
               <p className="font-bold">
-                {followingCount.count}
+                {followingCount?.count ?? 0}
               </p>
 
               <p className="text-sm text-gray-500">
@@ -186,19 +206,71 @@ export default async function PublicProfilePage({
 
           </div>
 
-          {/* FOLLOW BUTTON */}
+          {/* =========================
+              FOLLOW BUTTON
+          ========================= */}
 
           {session &&
             session.user.id !== profile.id && (
               <FollowButton
                 userId={profile.id}
-                initialFollowing={isFollowing}
+                initialFollowing={
+                  initialFollowing
+                }
               />
             )}
 
         </div>
 
+        {/* =========================
+            POSTS
+        ========================= */}
+
+        <section className="mt-8">
+
+          <h2 className="mb-4 text-xl font-bold">
+            Posts
+          </h2>
+
+          {profilePosts.length === 0 ? (
+            <div className="rounded-xl border p-6 text-center">
+              <p className="text-gray-500">
+                No posts yet.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+
+              {profilePosts.map((post) => (
+                <article
+                  key={post.id}
+                  className="rounded-xl border p-5"
+                >
+
+                  {/* POST CONTENT */}
+
+                  <p className="whitespace-pre-wrap">
+                    {post.content}
+                  </p>
+
+                  {/* DATE */}
+
+                  <p className="mt-3 text-xs text-gray-400">
+                    {new Date(
+                      post.createdAt
+                    ).toLocaleString()}
+                  </p>
+
+                </article>
+              ))}
+
+            </div>
+          )}
+
+        </section>
+
       </div>
     </main>
   );
 }
+

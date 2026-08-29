@@ -1,65 +1,53 @@
+
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-type CurrentUser = {
-  name: string;
-  username: string | null;
-  image: string | null;
-};
-
 export default function Navbar() {
-  const router = useRouter();
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const [user, setUser] = useState<CurrentUser | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function getCurrentUser() {
-      try {
-        const response = await fetch("/api/profile");
-
-        if (!response.ok) {
-          setUser(null);
-          return;
-        }
-
-        const data = await response.json();
-
-        if (data.success) {
-          setUser(data.profile);
-        }
-      } catch (error) {
-        console.error("NAVBAR USER ERROR:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    getCurrentUser();
-  }, []);
-
-  async function handleSignOut() {
+  async function fetchUnreadCount() {
     try {
-      await fetch("/api/auth/sign-out", {
-        method: "POST",
-        credentials: "include",
-      });
+      const response = await fetch(
+        "/api/notifications",
+        {
+          credentials: "include",
+        }
+      );
 
-      router.push("/sign-in");
-      router.refresh();
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+
+      setUnreadCount(data.unreadCount || 0);
     } catch (error) {
-      console.error("SIGN OUT ERROR:", error);
+      console.error(
+        "GET UNREAD COUNT ERROR:",
+        error
+      );
     }
   }
+
+  useEffect(() => {
+    fetchUnreadCount();
+
+    // Refresh notification count every 10 seconds
+    const interval = setInterval(
+      fetchUnreadCount,
+      10000
+    );
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <nav className="border-b bg-white">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
 
-        {/* Logo */}
+        {/* LOGO */}
 
         <Link
           href="/home"
@@ -68,48 +56,53 @@ export default function Navbar() {
           🚀 DevConnect
         </Link>
 
-        {/* Navigation */}
+        {/* NAVIGATION */}
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
 
           <Link
             href="/home"
-            className="rounded-lg px-3 py-2 hover:bg-gray-100"
+            className="font-medium hover:text-blue-600"
           >
             🏠 Home
           </Link>
 
           <Link
             href="/search"
-            className="rounded-lg px-3 py-2 hover:bg-gray-100"
+            className="font-medium hover:text-blue-600"
           >
             🔎 Search
           </Link>
 
-          {!loading && user && (
-            <Link
-              href={
-                user.username
-                  ? `/profile/${user.username}`
-                  : "/profile"
-              }
-              className="rounded-lg px-3 py-2 hover:bg-gray-100"
-            >
-              👤 Profile
-            </Link>
-          )}
+          {/* NOTIFICATIONS */}
 
-          {!loading && user && (
-            <button
-              onClick={handleSignOut}
-              className="rounded-lg bg-black px-4 py-2 text-white hover:opacity-80"
-            >
-              Sign Out
-            </button>
-          )}
+          <Link
+            href="/notifications"
+            className="relative font-medium hover:text-blue-600"
+          >
+            🔔 Notifications
+
+            {unreadCount > 0 && (
+              <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white">
+                {unreadCount > 99
+                  ? "99+"
+                  : unreadCount}
+              </span>
+            )}
+          </Link>
+
+          {/* PROFILE */}
+
+          <Link
+            href="/profile"
+            className="font-medium hover:text-blue-600"
+          >
+            👤 Profile
+          </Link>
 
         </div>
       </div>
     </nav>
   );
 }
+
